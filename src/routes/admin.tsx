@@ -334,7 +334,7 @@ function AdminPage() {
           </Field>
           <Field label="Categoría">
             <Select
-              value={form.category_id || undefined}
+              {...(form.category_id ? { value: form.category_id } : {})}
               onValueChange={(value) => setForm({ ...form, category_id: value })}
             >
               <SelectTrigger>

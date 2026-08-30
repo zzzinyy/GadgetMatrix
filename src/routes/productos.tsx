@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { categoriesQuery, productsQuery } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
-type Search = { categoria?: string };
+type Search = { categoria?: string | undefined };
 
 export const Route = createFileRoute("/productos")({
-  validateSearch: (search: Record<string, unknown>): Search => ({
-    categoria: typeof search["categoria"] === "string" ? search["categoria"] : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): Search =>
+    typeof search["categoria"] === "string" ? { categoria: search["categoria"] } : {},
+
   head: () => ({
     meta: [
       { title: "Catálogo de gadgets analizados | GadgetRadar" },
