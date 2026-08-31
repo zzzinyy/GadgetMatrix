@@ -103,7 +103,12 @@ function ProductPage() {
               {formatPrice(product.price, product.currency)}
             </p>
             <Button asChild size="lg" className="mt-4 w-full">
-              <a href={buyUrl} target="_blank" rel="nofollow sponsored noopener noreferrer">
+              <a
+                href={buyUrl}
+                target="_blank"
+                rel="nofollow sponsored noopener noreferrer"
+                onClick={() => trackEvent(product.id, "affiliate_click")}
+              >
                 Ver precio en Amazon
                 <ExternalLink className="size-4" />
               </a>
