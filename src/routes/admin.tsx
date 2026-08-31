@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AdminStats } from "@/components/AdminStats";
 import {
   affiliateTagQuery,
   categoriesQuery,
@@ -286,7 +287,9 @@ function AdminPage() {
         </Button>
       </div>
 
-      <section className="mt-10 rounded-xl border border-border bg-card p-6">
+      <AdminStats products={products ?? []} />
+
+      <section className="mt-8 rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Tag de afiliado de Amazon</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Se añade automáticamente a todos los enlaces de compra (?tag=…).

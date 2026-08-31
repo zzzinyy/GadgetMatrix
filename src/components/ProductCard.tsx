@@ -2,12 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice, type ProductWithSpecs } from "@/lib/catalog";
+import { trackEvent } from "@/lib/analytics";
 
 export function ProductCard({ product }: { product: ProductWithSpecs }) {
   return (
     <Link
       to="/producto/$slug"
       params={{ slug: product.slug }}
+      onClick={() => trackEvent(product.id, "card_click")}
       className="glow-card hover:glow-card-hover group flex flex-col overflow-hidden rounded-xl border border-border bg-card"
     >
       <div className="relative aspect-4/3 overflow-hidden bg-surface">

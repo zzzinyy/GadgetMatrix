@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { Check, ExternalLink, Star, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { affiliateTagQuery, affiliateUrl, formatPrice, productQuery } from "@/lib/catalog";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/producto/$slug")({
   head: ({ params }) => ({
@@ -28,6 +30,15 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const { data: product, isLoading } = useQuery(productQuery(slug));
   const { data: tag } = useQuery(affiliateTagQuery);
+  const trackedId = useRef<string | null>(null);
+  const productId = product?.id ?? null;
+
+  useEffect(() => {
+    if (!productId || trackedId.current === productId) return;
+    trackedId.current = productId;
+    trackEvent(productId, "view");
+  }, [productId]);
+
 
   if (isLoading) {
     return <p className="mx-auto max-w-6xl px-4 py-20 text-muted-foreground">Cargando ficha…</p>;
@@ -92,7 +103,12 @@ function ProductPage() {
               {formatPrice(product.price, product.currency)}
             </p>
             <Button asChild size="lg" className="mt-4 w-full">
-              <a href={buyUrl} target="_blank" rel="nofollow sponsored noopener noreferrer">
+              <a
+                href={buyUrl}
+                target="_blank"
+                rel="nofollow sponsored noopener noreferrer"
+                onClick={() => trackEvent(product.id, "affiliate_click")}
+              >
                 Ver precio en Amazon
                 <ExternalLink className="size-4" />
               </a>
