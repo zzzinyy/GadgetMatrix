@@ -15,6 +15,13 @@
       "when": 1788089758444,
       "tag": "0001_claim_first_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788166197188,
+      "tag": "0002_create_product_events",
+      "breakpoints": true
     }
   ]
 }
