@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ComparadorRouteImport } from './routes/comparador'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
 import { Route as ProductoSlugRouteImport } from './routes/producto.$slug'
@@ -29,6 +30,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComparadorRoute = ComparadorRouteImport.update({
+  id: '/comparador',
+  path: '/comparador',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductosRoute = ProductosRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
   '/producto/$slug': typeof ProductoSlugRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
   '/producto/$slug': typeof ProductoSlugRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
   '/producto/$slug': typeof ProductoSlugRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
     | '/producto/$slug'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
     | '/producto/$slug'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
     | '/producto/$slug'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  ComparadorRoute: typeof ComparadorRoute
   ProductosRoute: typeof ProductosRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
   ProductoSlugRoute: typeof ProductoSlugRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comparador': {
+      id: '/comparador'
+      path: '/comparador'
+      fullPath: '/comparador'
+      preLoaderRoute: typeof ComparadorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/productos': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  ComparadorRoute: ComparadorRoute,
   ProductosRoute: ProductosRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
   ProductoSlugRoute: ProductoSlugRoute,
