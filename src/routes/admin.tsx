@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AdminStats } from "@/components/AdminStats";
 import {
   affiliateTagQuery,
   categoriesQuery,
