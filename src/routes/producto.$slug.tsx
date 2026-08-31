@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { Check, ExternalLink, Star, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { affiliateTagQuery, affiliateUrl, formatPrice, productQuery } from "@/lib/catalog";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/producto/$slug")({
   head: ({ params }) => ({
