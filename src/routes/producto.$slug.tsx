@@ -30,6 +30,15 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const { data: product, isLoading } = useQuery(productQuery(slug));
   const { data: tag } = useQuery(affiliateTagQuery);
+  const trackedId = useRef<string | null>(null);
+  const productId = product?.id ?? null;
+
+  useEffect(() => {
+    if (!productId || trackedId.current === productId) return;
+    trackedId.current = productId;
+    trackEvent(productId, "view");
+  }, [productId]);
+
 
   if (isLoading) {
     return <p className="mx-auto max-w-6xl px-4 py-20 text-muted-foreground">Cargando ficha…</p>;
