@@ -81,13 +81,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GadgetRadar — Análisis y ofertas de tecnología" },
+      { title: "GadgetMatrix — Análisis y ofertas de tecnología" },
       {
         name: "description",
         content:
           "Fichas técnicas, análisis y precios de gadgets y tecnología con enlaces de compra en Amazon.",
       },
-      { property: "og:title", content: "GadgetRadar — Análisis y ofertas de tecnología" },
+      { property: "og:title", content: "GadgetMatrix — Análisis y ofertas de tecnología" },
       {
         property: "og:description",
         content: "Fichas técnicas, análisis y precios de los mejores gadgets.",

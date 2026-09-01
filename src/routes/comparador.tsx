@@ -19,13 +19,13 @@ const MAX = 3;
 export const Route = createFileRoute("/comparador")({
   head: () => ({
     meta: [
-      { title: "Comparador de gadgets: enfrenta dos o tres | GadgetRadar" },
+      { title: "Comparador de gadgets: enfrenta dos o tres | GadgetMatrix" },
       {
         name: "description",
         content:
           "Compara hasta 3 gadgets lado a lado: precio, valoración, pros, contras y ficha técnica completa para elegir mejor.",
       },
-      { property: "og:title", content: "Comparador de gadgets | GadgetRadar" },
+      { property: "og:title", content: "Comparador de gadgets | GadgetMatrix" },
       {
         property: "og:description",
         content: "Elige hasta 3 productos y compara sus especificaciones técnicas al detalle.",

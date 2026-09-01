@@ -20,7 +20,7 @@ export function SiteHeader() {
             <Cpu className="size-5" />
           </span>
           <span className="font-display text-lg font-bold tracking-tight">
-            Gadget<span className="text-gradient">Radar</span>
+            Gadget<span className="text-gradient">Matrix</span>
           </span>
         </Link>
 

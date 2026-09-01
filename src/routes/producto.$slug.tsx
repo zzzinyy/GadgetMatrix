@@ -10,13 +10,13 @@ import { trackEvent } from "@/lib/analytics";
 export const Route = createFileRoute("/producto/$slug")({
   head: ({ params }) => ({
     meta: [
-      { title: `Ficha técnica y precio — ${params.slug} | GadgetRadar` },
+      { title: `Ficha técnica y precio — ${params.slug} | GadgetMatrix` },
       {
         name: "description",
         content:
           "Ficha técnica completa, análisis, pros y contras y precio actualizado con enlace de compra en Amazon.",
       },
-      { property: "og:title", content: `Ficha técnica — ${params.slug} | GadgetRadar` },
+      { property: "og:title", content: `Ficha técnica — ${params.slug} | GadgetMatrix` },
       {
         property: "og:description",
         content: "Especificaciones detalladas, valoración y enlace de compra en Amazon.",

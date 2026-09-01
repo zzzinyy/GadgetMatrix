@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/sobre-nosotros")({
   head: () => ({
     meta: [
-      { title: "Cómo analizamos los gadgets | GadgetRadar" },
+      { title: "Cómo analizamos los gadgets | GadgetMatrix" },
       {
         name: "description",
         content:
           "Nuestro método de análisis, cómo elaboramos las fichas técnicas y cómo funciona nuestro programa de afiliados de Amazon.",
       },
-      { property: "og:title", content: "Cómo analizamos los gadgets | GadgetRadar" },
+      { property: "og:title", content: "Cómo analizamos los gadgets | GadgetMatrix" },
       {
         property: "og:description",
         content: "Método de análisis, fichas técnicas y transparencia de afiliación.",
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/sobre-nosotros")({
 function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="font-display text-3xl font-bold">Sobre GadgetRadar</h1>
+      <h1 className="font-display text-3xl font-bold">Sobre GadgetMatrix</h1>
       <p className="mt-4 text-lg text-muted-foreground">
         Somos un equipo pequeño obsesionado con la tecnología de consumo. Publicamos fichas técnicas
         detalladas y opiniones honestas para que elijas sin perder horas comparando pestañas.

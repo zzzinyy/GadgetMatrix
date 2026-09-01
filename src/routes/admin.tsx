@@ -28,10 +28,10 @@ import {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Panel de administración | GadgetRadar" },
+      { title: "Panel de administración | GadgetMatrix" },
       { name: "description", content: "Gestiona productos, fichas técnicas y ajustes del sitio." },
-      { property: "og:title", content: "Panel de administración | GadgetRadar" },
-      { property: "og:description", content: "Gestión del catálogo de GadgetRadar." },
+      { property: "og:title", content: "Panel de administración | GadgetMatrix" },
+      { property: "og:description", content: "Gestión del catálogo de GadgetMatrix." },
       { name: "robots", content: "noindex" },
     ],
   }),

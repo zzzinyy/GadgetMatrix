@@ -9,13 +9,13 @@ import { categoriesQuery, productsQuery } from "@/lib/catalog";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GadgetRadar — Los mejores gadgets analizados" },
+      { title: "GadgetMatrix — Los mejores gadgets analizados" },
       {
         name: "description",
         content:
           "Comparativas, fichas técnicas y precios actualizados de auriculares, portátiles, smartwatches y accesorios con enlaces a Amazon.",
       },
-      { property: "og:title", content: "GadgetRadar — Los mejores gadgets analizados" },
+      { property: "og:title", content: "GadgetMatrix — Los mejores gadgets analizados" },
       {
         property: "og:description",
         content: "Fichas técnicas detalladas y enlaces de compra en Amazon.",
