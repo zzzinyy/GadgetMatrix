@@ -5,7 +5,7 @@ export function SiteFooter() {
     <footer className="mt-24 border-t border-border/60 bg-surface/40">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
         <div>
-          <p className="font-display text-base font-bold">GadgetRadar</p>
+          <p className="font-display text-base font-bold">GadgetMatrix</p>
           <p className="mt-2 text-sm text-muted-foreground">
             Análisis y fichas técnicas de tecnología y gadgets, con enlaces de compra en Amazon.
           </p>
@@ -39,7 +39,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} GadgetRadar. Todos los derechos reservados.
+        © {new Date().getFullYear()} GadgetMatrix. Todos los derechos reservados.
       </div>
     </footer>
   );

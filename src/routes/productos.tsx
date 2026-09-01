@@ -14,13 +14,13 @@ export const Route = createFileRoute("/productos")({
 
   head: () => ({
     meta: [
-      { title: "Catálogo de gadgets analizados | GadgetRadar" },
+      { title: "Catálogo de gadgets analizados | GadgetMatrix" },
       {
         name: "description",
         content:
           "Todos nuestros análisis de tecnología: auriculares, portátiles, smartwatches y accesorios con ficha técnica y precio.",
       },
-      { property: "og:title", content: "Catálogo de gadgets analizados | GadgetRadar" },
+      { property: "og:title", content: "Catálogo de gadgets analizados | GadgetMatrix" },
       {
         property: "og:description",
         content: "Filtra por categoría y compara fichas técnicas y precios.",

@@ -12,12 +12,12 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Acceso administrador | GadgetRadar" },
+      { title: "Acceso administrador | GadgetMatrix" },
       {
         name: "description",
-        content: "Inicia sesión para gestionar los productos y fichas técnicas de GadgetRadar.",
+        content: "Inicia sesión para gestionar los productos y fichas técnicas de GadgetMatrix.",
       },
-      { property: "og:title", content: "Acceso administrador | GadgetRadar" },
+      { property: "og:title", content: "Acceso administrador | GadgetMatrix" },
       { property: "og:description", content: "Panel de gestión del catálogo." },
     ],
   }),
