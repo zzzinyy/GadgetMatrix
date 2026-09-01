@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 const links = [
   { to: "/", label: "Inicio" },
   { to: "/productos", label: "Productos" },
+  { to: "/comparador", label: "Comparador" },
   { to: "/sobre-nosotros", label: "Sobre nosotros" },
 ] as const;
 
