@@ -22,6 +22,13 @@
       "when": 1788166197188,
       "tag": "0002_create_product_events",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788330930755,
+      "tag": "0003_content_reviews_alerts_toplists",
+      "breakpoints": true
     }
   ]
 }
