@@ -16,6 +16,7 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ComparadorRouteImport } from './routes/comparador'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ProductoSlugRouteImport } from './routes/producto.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const SobreNosotrosRoute = SobreNosotrosRouteImport.update({
   path: '/sobre-nosotros',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
 const ProductoSlugRoute = ProductoSlugRouteImport.update({
   id: '/producto/$slug',
   path: '/producto/$slug',
@@ -63,20 +69,22 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
 }
 export interface FileRoutesById {
@@ -84,10 +92,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
+    | '/blog/$slug'
     | '/producto/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
+    | '/blog/$slug'
     | '/producto/$slug'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
+    | '/blog/$slug'
     | '/producto/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -127,7 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
-  BlogRoute: typeof BlogRoute
+  BlogRoute: typeof BlogRouteWithChildren
   ComparadorRoute: typeof ComparadorRoute
   ProductosRoute: typeof ProductosRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
@@ -185,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SobreNosotrosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/producto/$slug': {
       id: '/producto/$slug'
       path: '/producto/$slug'
@@ -195,11 +214,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
-  BlogRoute: BlogRoute,
+  BlogRoute: BlogRouteWithChildren,
   ComparadorRoute: ComparadorRoute,
   ProductosRoute: ProductosRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
