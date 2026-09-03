@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ComparadorRouteImport } from './routes/comparador'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
@@ -30,6 +31,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComparadorRoute = ComparadorRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/blog'
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/blog'
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/blog'
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRoute
   ComparadorRoute: typeof ComparadorRoute
   ProductosRoute: typeof ProductosRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/comparador': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRoute,
   ComparadorRoute: ComparadorRoute,
   ProductosRoute: ProductosRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
