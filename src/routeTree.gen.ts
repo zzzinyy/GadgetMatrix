@@ -20,6 +20,7 @@ import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
 import { Route as TopRouteImport } from './routes/top'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ProductoSlugRouteImport } from './routes/producto.$slug'
+import { Route as TopSlugRouteImport } from './routes/top.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const ProductoSlugRoute = ProductoSlugRouteImport.update({
   path: '/producto/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TopSlugRoute = TopSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => TopRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,9 +92,10 @@ export interface FileRoutesByFullPath {
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
-  '/top': typeof TopRoute
+  '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
+  '/top/$slug': typeof TopSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,9 +106,10 @@ export interface FileRoutesByTo {
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
-  '/top': typeof TopRoute
+  '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
+  '/top/$slug': typeof TopSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,9 +121,10 @@ export interface FileRoutesById {
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
-  '/top': typeof TopRoute
+  '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
+  '/top/$slug': typeof TopSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/top'
     | '/blog/$slug'
     | '/producto/$slug'
+    | '/top/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/top'
     | '/blog/$slug'
     | '/producto/$slug'
+    | '/top/$slug'
   id:
     | '__root__'
     | '/'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/top'
     | '/blog/$slug'
     | '/producto/$slug'
+    | '/top/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -168,7 +180,7 @@ export interface RootRouteChildren {
   ComparadorRoute: typeof ComparadorRoute
   ProductosRoute: typeof ProductosRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
-  TopRoute: typeof TopRoute
+  TopRoute: typeof TopRouteWithChildren
   ProductoSlugRoute: typeof ProductoSlugRoute
 }
 
@@ -251,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/top/$slug': {
+      id: '/top/$slug'
+      path: '/$slug'
+      fullPath: '/top/$slug'
+      preLoaderRoute: typeof TopSlugRouteImport
+      parentRoute: typeof TopRoute
+    }
   }
 }
 
@@ -264,6 +283,16 @@ const BlogRouteChildren: BlogRouteChildren = {
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
+interface TopRouteChildren {
+  TopSlugRoute: typeof TopSlugRoute
+}
+
+const TopRouteChildren: TopRouteChildren = {
+  TopSlugRoute: TopSlugRoute,
+}
+
+const TopRouteWithChildren = TopRoute._addFileChildren(TopRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
@@ -273,7 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComparadorRoute: ComparadorRoute,
   ProductosRoute: ProductosRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
-  TopRoute: TopRoute,
+  TopRoute: TopRouteWithChildren,
   ProductoSlugRoute: ProductoSlugRoute,
 }
 export const routeTree = rootRouteImport
