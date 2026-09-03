@@ -12,10 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as ChollosRouteImport } from './routes/chollos'
 import { Route as ComparadorRouteImport } from './routes/comparador'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
+import { Route as TopRouteImport } from './routes/top'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ProductoSlugRouteImport } from './routes/producto.$slug'
+import { Route as TopSlugRouteImport } from './routes/top.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +35,16 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChollosRoute = ChollosRouteImport.update({
+  id: '/chollos',
+  path: '/chollos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComparadorRoute = ComparadorRouteImport.update({
@@ -47,39 +62,69 @@ const SobreNosotrosRoute = SobreNosotrosRouteImport.update({
   path: '/sobre-nosotros',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TopRoute = TopRouteImport.update({
+  id: '/top',
+  path: '/top',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
 const ProductoSlugRoute = ProductoSlugRouteImport.update({
   id: '/producto/$slug',
   path: '/producto/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TopSlugRoute = TopSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => TopRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/top': typeof TopRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
+  '/top/$slug': typeof TopSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/top': typeof TopRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
+  '/top/$slug': typeof TopSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/top': typeof TopRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
+  '/top/$slug': typeof TopSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,37 +132,55 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/blog'
+    | '/chollos'
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
+    | '/top'
+    | '/blog/$slug'
     | '/producto/$slug'
+    | '/top/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/auth'
+    | '/blog'
+    | '/chollos'
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
+    | '/top'
+    | '/blog/$slug'
     | '/producto/$slug'
+    | '/top/$slug'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/auth'
+    | '/blog'
+    | '/chollos'
     | '/comparador'
     | '/productos'
     | '/sobre-nosotros'
+    | '/top'
+    | '/blog/$slug'
     | '/producto/$slug'
+    | '/top/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  BlogRoute: typeof BlogRouteWithChildren
+  ChollosRoute: typeof ChollosRoute
   ComparadorRoute: typeof ComparadorRoute
   ProductosRoute: typeof ProductosRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
+  TopRoute: typeof TopRouteWithChildren
   ProductoSlugRoute: typeof ProductoSlugRoute
 }
 
@@ -144,6 +207,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chollos': {
+      id: '/chollos'
+      path: '/chollos'
+      fullPath: '/chollos'
+      preLoaderRoute: typeof ChollosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/comparador': {
       id: '/comparador'
       path: '/comparador'
@@ -165,6 +242,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SobreNosotrosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/top': {
+      id: '/top'
+      path: '/top'
+      fullPath: '/top'
+      preLoaderRoute: typeof TopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/producto/$slug': {
       id: '/producto/$slug'
       path: '/producto/$slug'
@@ -172,16 +263,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/top/$slug': {
+      id: '/top/$slug'
+      path: '/$slug'
+      fullPath: '/top/$slug'
+      preLoaderRoute: typeof TopSlugRouteImport
+      parentRoute: typeof TopRoute
+    }
   }
 }
+
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
+interface TopRouteChildren {
+  TopSlugRoute: typeof TopSlugRoute
+}
+
+const TopRouteChildren: TopRouteChildren = {
+  TopSlugRoute: TopSlugRoute,
+}
+
+const TopRouteWithChildren = TopRoute._addFileChildren(TopRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  BlogRoute: BlogRouteWithChildren,
+  ChollosRoute: ChollosRoute,
   ComparadorRoute: ComparadorRoute,
   ProductosRoute: ProductosRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
+  TopRoute: TopRouteWithChildren,
   ProductoSlugRoute: ProductoSlugRoute,
 }
 export const routeTree = rootRouteImport
