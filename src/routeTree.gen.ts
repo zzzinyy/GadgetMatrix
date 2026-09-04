@@ -16,6 +16,7 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ChollosRouteImport } from './routes/chollos'
 import { Route as ComparadorRouteImport } from './routes/comparador'
 import { Route as ProductosRouteImport } from './routes/productos'
+import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
 import { Route as TopRouteImport } from './routes/top'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -57,6 +58,11 @@ const ProductosRoute = ProductosRouteImport.update({
   path: '/productos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreNosotrosRoute = SobreNosotrosRouteImport.update({
   id: '/sobre-nosotros',
   path: '/sobre-nosotros',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
+  '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
   '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
+  '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
   '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/productos': typeof ProductosRoute
+  '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
   '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/chollos'
     | '/comparador'
     | '/productos'
+    | '/quiz'
     | '/sobre-nosotros'
     | '/top'
     | '/blog/$slug'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/chollos'
     | '/comparador'
     | '/productos'
+    | '/quiz'
     | '/sobre-nosotros'
     | '/top'
     | '/blog/$slug'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/chollos'
     | '/comparador'
     | '/productos'
+    | '/quiz'
     | '/sobre-nosotros'
     | '/top'
     | '/blog/$slug'
@@ -179,6 +191,7 @@ export interface RootRouteChildren {
   ChollosRoute: typeof ChollosRoute
   ComparadorRoute: typeof ComparadorRoute
   ProductosRoute: typeof ProductosRoute
+  QuizRoute: typeof QuizRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
   TopRoute: typeof TopRouteWithChildren
   ProductoSlugRoute: typeof ProductoSlugRoute
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/productos'
       fullPath: '/productos'
       preLoaderRoute: typeof ProductosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sobre-nosotros': {
@@ -301,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChollosRoute: ChollosRoute,
   ComparadorRoute: ComparadorRoute,
   ProductosRoute: ProductosRoute,
+  QuizRoute: QuizRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
   TopRoute: TopRouteWithChildren,
   ProductoSlugRoute: ProductoSlugRoute,
