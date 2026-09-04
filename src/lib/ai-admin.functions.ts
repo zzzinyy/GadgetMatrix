@@ -383,6 +383,47 @@ export const runAdminAgent = createServerFn({ method: "POST" })
           actions.push(`Ajuste actualizado: ${String(args["key"])}`);
           return { ok: true, detail: "ajuste guardado" };
         }
+        case "set_product_price": {
+          const slug = String(args["slug"]);
+          const price = Number(args["price"]);
+          const { error } = await supabaseAdmin
+            .from("products")
+            .update({ price, updated_at: new Date().toISOString() })
+            .eq("slug", slug);
+          if (error) return { ok: false, detail: error.message };
+          actions.push(`Precio actualizado: ${slug} → ${price}`);
+          return { ok: true, detail: `precio de ${slug} actualizado` };
+        }
+        case "delete_content": {
+          const kind = String(args["kind"]);
+          const slug = String(args["slug"]);
+          const table =
+            kind === "blog_post" ? "blog_posts" : kind === "top_list" ? "top_lists" : "categories";
+          const { error } = await supabaseAdmin.from(table).delete().eq("slug", slug);
+          if (error) return { ok: false, detail: error.message };
+          actions.push(`Eliminado (${kind}): ${slug}`);
+          return { ok: true, detail: `${kind} ${slug} eliminado` };
+        }
+        case "get_analytics": {
+          const days = Number(args["days"] ?? 30);
+          const since = new Date(Date.now() - days * 86400000).toISOString();
+          const [{ data: events }, { data: products }] = await Promise.all([
+            supabaseAdmin
+              .from("product_events")
+              .select("product_id, event_type")
+              .gte("created_at", since),
+            supabaseAdmin.from("products").select("id, name, slug"),
+          ]);
+          const names = new Map((products ?? []).map((p) => [p.id, p.name]));
+          const summary: Record<string, Record<string, number>> = {};
+          for (const event of events ?? []) {
+            const key = names.get(event.product_id ?? "") ?? "otros";
+            summary[key] = summary[key] ?? {};
+            summary[key]![event.event_type] = (summary[key]![event.event_type] ?? 0) + 1;
+          }
+          return { ok: true, detail: `analíticas de ${days} días`, data: summary };
+        }
+
         default:
           return { ok: false, detail: `herramienta desconocida: ${name}` };
       }
