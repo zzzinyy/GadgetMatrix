@@ -21,6 +21,7 @@ Reglas:
 - Los slugs van en minúsculas, sin acentos y con guiones.
 - Escribe textos de marketing útiles y honestos: descripción corta (<200 caracteres), análisis de 2-3 párrafos, 3-5 pros y 2-4 contras, y 5-8 especificaciones técnicas realistas.
 - Nunca inventes URLs de Amazon: si el usuario no da una, usa https://www.amazon.es/s?k=<nombre+del+producto>.
+- Puedes actualizar precios (set_product_price), borrar contenidos (delete_content) y consultar las estadísticas de la web (get_analytics) si el usuario lo pide.
 - Cuando termines, resume en una lista lo que has hecho.`;
 
 const tools = [
@@ -154,7 +155,48 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "set_product_price",
+      description:
+        "Actualiza el precio de un producto por slug (queda registrado en el histórico de precios y puede generar chollos).",
+      parameters: {
+        type: "object",
+        properties: { slug: { type: "string" }, price: { type: "number" } },
+        required: ["slug", "price"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_content",
+      description: "Elimina un artículo del blog o una lista Top por slug.",
+      parameters: {
+        type: "object",
+        properties: {
+          kind: { type: "string", enum: ["blog_post", "top_list", "category"] },
+          slug: { type: "string" },
+        },
+        required: ["kind", "slug"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_analytics",
+      description:
+        "Resumen de interacciones de los últimos días: visitas, clics en tarjetas y clics de afiliado por producto.",
+      parameters: {
+        type: "object",
+        properties: { days: { type: "number" } },
+      },
+    },
+  },
 ] as const;
+
 
 type ToolResult = { ok: boolean; detail: string; data?: unknown };
 
@@ -342,6 +384,47 @@ export const runAdminAgent = createServerFn({ method: "POST" })
           actions.push(`Ajuste actualizado: ${String(args["key"])}`);
           return { ok: true, detail: "ajuste guardado" };
         }
+        case "set_product_price": {
+          const slug = String(args["slug"]);
+          const price = Number(args["price"]);
+          const { error } = await supabaseAdmin
+            .from("products")
+            .update({ price, updated_at: new Date().toISOString() })
+            .eq("slug", slug);
+          if (error) return { ok: false, detail: error.message };
+          actions.push(`Precio actualizado: ${slug} → ${price}`);
+          return { ok: true, detail: `precio de ${slug} actualizado` };
+        }
+        case "delete_content": {
+          const kind = String(args["kind"]);
+          const slug = String(args["slug"]);
+          const table =
+            kind === "blog_post" ? "blog_posts" : kind === "top_list" ? "top_lists" : "categories";
+          const { error } = await supabaseAdmin.from(table).delete().eq("slug", slug);
+          if (error) return { ok: false, detail: error.message };
+          actions.push(`Eliminado (${kind}): ${slug}`);
+          return { ok: true, detail: `${kind} ${slug} eliminado` };
+        }
+        case "get_analytics": {
+          const days = Number(args["days"] ?? 30);
+          const since = new Date(Date.now() - days * 86400000).toISOString();
+          const [{ data: events }, { data: products }] = await Promise.all([
+            supabaseAdmin
+              .from("product_events")
+              .select("product_id, event_type")
+              .gte("created_at", since),
+            supabaseAdmin.from("products").select("id, name, slug"),
+          ]);
+          const names = new Map((products ?? []).map((p) => [p.id, p.name]));
+          const summary: Record<string, Record<string, number>> = {};
+          for (const event of events ?? []) {
+            const key = names.get(event.product_id ?? "") ?? "otros";
+            summary[key] = summary[key] ?? {};
+            summary[key]![event.event_type] = (summary[key]![event.event_type] ?? 0) + 1;
+          }
+          return { ok: true, detail: `analíticas de ${days} días`, data: summary };
+        }
+
         default:
           return { ok: false, detail: `herramienta desconocida: ${name}` };
       }

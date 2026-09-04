@@ -6,8 +6,12 @@ const links = [
   { to: "/", label: "Inicio" },
   { to: "/productos", label: "Productos" },
   { to: "/comparador", label: "Comparador" },
-  { to: "/sobre-nosotros", label: "Sobre nosotros" },
+  { to: "/quiz", label: "Quiz" },
+  { to: "/top", label: "Top" },
+  { to: "/chollos", label: "Chollos" },
+  { to: "/blog", label: "Blog" },
 ] as const;
+
 
 export function SiteHeader() {
   const { isAdmin } = useAuth();
