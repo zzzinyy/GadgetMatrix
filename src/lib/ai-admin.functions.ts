@@ -21,6 +21,7 @@ Reglas:
 - Los slugs van en minúsculas, sin acentos y con guiones.
 - Escribe textos de marketing útiles y honestos: descripción corta (<200 caracteres), análisis de 2-3 párrafos, 3-5 pros y 2-4 contras, y 5-8 especificaciones técnicas realistas.
 - Nunca inventes URLs de Amazon: si el usuario no da una, usa https://www.amazon.es/s?k=<nombre+del+producto>.
+- Puedes actualizar precios (set_product_price), borrar contenidos (delete_content) y consultar las estadísticas de la web (get_analytics) si el usuario lo pide.
 - Cuando termines, resume en una lista lo que has hecho.`;
 
 const tools = [
