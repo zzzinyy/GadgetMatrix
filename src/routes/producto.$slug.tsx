@@ -182,6 +182,11 @@ function ProductPage() {
           </dl>
         </section>
       </div>
+
+      <PriceAlert productId={product.id} price={product.price} />
+      <ShareButtons title={product.name} />
+      <ProductReviews productId={product.id} />
     </article>
+
   );
 }
