@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { affiliateTagQuery, affiliateUrl, formatPrice, productQuery } from "@/lib/catalog";
 import { trackEvent } from "@/lib/analytics";
+import { PriceAlert, ShareButtons } from "@/components/ProductActions";
+import { ProductReviews } from "@/components/ProductReviews";
 
 export const Route = createFileRoute("/producto/$slug")({
   head: ({ params }) => ({
