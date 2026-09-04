@@ -154,7 +154,48 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "set_product_price",
+      description:
+        "Actualiza el precio de un producto por slug (queda registrado en el histórico de precios y puede generar chollos).",
+      parameters: {
+        type: "object",
+        properties: { slug: { type: "string" }, price: { type: "number" } },
+        required: ["slug", "price"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_content",
+      description: "Elimina un artículo del blog o una lista Top por slug.",
+      parameters: {
+        type: "object",
+        properties: {
+          kind: { type: "string", enum: ["blog_post", "top_list", "category"] },
+          slug: { type: "string" },
+        },
+        required: ["kind", "slug"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_analytics",
+      description:
+        "Resumen de interacciones de los últimos días: visitas, clics en tarjetas y clics de afiliado por producto.",
+      parameters: {
+        type: "object",
+        properties: { days: { type: "number" } },
+      },
+    },
+  },
 ] as const;
+
 
 type ToolResult = { ok: boolean; detail: string; data?: unknown };
 
