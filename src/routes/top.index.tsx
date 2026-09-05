@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Trophy } from "lucide-react";
 import { topListsQuery } from "@/lib/content";
 
-export const Route = createFileRoute("/top")({
+export const Route = createFileRoute("/top/")({
   head: () => ({
     meta: [
       { title: "Top recomendados: mejores gadgets por categoría | GadgetMatrix" },
