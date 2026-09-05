@@ -90,8 +90,14 @@ function TopListPage() {
       <p className="mt-2 text-primary">{list.subtitle}</p>
       <p className="mt-4 whitespace-pre-line text-muted-foreground">{list.description}</p>
 
+      {resolved.length === 0 ? (
+        <p className="mt-10 text-muted-foreground">
+          Esta lista todavía no tiene productos disponibles.
+        </p>
+      ) : null}
+
       <ol className="mt-10 space-y-6">
-        {items.map((item, index) => {
+        {resolved.map((item, index) => {
           const product = (products ?? []).find((p) => p.id === item.product_id);
           if (!product) return null;
           const url = affiliateUrl(product.amazon_url, tag);
