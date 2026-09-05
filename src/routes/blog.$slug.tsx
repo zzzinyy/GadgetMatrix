@@ -23,16 +23,42 @@ export const Route = createFileRoute("/blog/$slug")({
 
 function BlogPostPage() {
   const { slug } = Route.useParams();
-  const { data: post, isLoading } = useQuery(blogPostQuery(slug));
+  const { data: post, isLoading, isError, refetch } = useQuery(blogPostQuery(slug));
 
   if (isLoading) {
-    return <p className="mx-auto max-w-3xl px-4 py-20 text-muted-foreground">Cargando artículo…</p>;
+    return (
+      <div className="mx-auto max-w-3xl animate-pulse px-4 py-20">
+        <div className="h-4 w-32 rounded bg-muted" />
+        <div className="mt-6 h-9 w-3/4 rounded bg-muted" />
+        <div className="mt-6 aspect-16/9 w-full rounded-2xl bg-muted" />
+        <div className="mt-6 h-4 w-full rounded bg-muted" />
+        <div className="mt-3 h-4 w-5/6 rounded bg-muted" />
+      </div>
+    );
   }
 
-  if (!post) {
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20">
+        <h1 className="font-display text-2xl font-bold">No pudimos cargar el artículo</h1>
+        <p className="mt-2 text-muted-foreground">Comprueba tu conexión e inténtalo de nuevo.</p>
+        <div className="mt-6 flex gap-3">
+          <Button onClick={() => refetch()}>Reintentar</Button>
+          <Button asChild variant="outline">
+            <Link to="/blog">Volver al blog</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post || !post.published) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-20">
         <h1 className="font-display text-2xl font-bold">Artículo no encontrado</h1>
+        <p className="mt-2 text-muted-foreground">
+          Puede que se haya retirado o que el enlace no sea correcto.
+        </p>
         <Button asChild className="mt-6">
           <Link to="/blog">Volver al blog</Link>
         </Button>
