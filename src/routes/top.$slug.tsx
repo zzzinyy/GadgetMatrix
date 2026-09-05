@@ -25,20 +25,47 @@ export const Route = createFileRoute("/top/$slug")({
 
 function TopListPage() {
   const { slug } = Route.useParams();
-  const { data: lists, isLoading } = useQuery(topListsQuery);
-  const { data: products } = useQuery(productsQuery);
+  const { data: lists, isLoading, isError, refetch } = useQuery(topListsQuery);
+  const { data: products, isLoading: productsLoading } = useQuery(productsQuery);
   const { data: tag } = useQuery(affiliateTagQuery);
 
   const list = (lists ?? []).find((item) => item.slug === slug);
 
-  if (isLoading) {
-    return <p className="mx-auto max-w-4xl px-4 py-20 text-muted-foreground">Cargando lista…</p>;
+  if (isLoading || productsLoading) {
+    return (
+      <div className="mx-auto max-w-4xl animate-pulse px-4 py-20">
+        <div className="h-4 w-40 rounded bg-muted" />
+        <div className="mt-6 h-9 w-2/3 rounded bg-muted" />
+        <div className="mt-8 space-y-4">
+          <div className="h-40 w-full rounded-xl bg-muted" />
+          <div className="h-40 w-full rounded-xl bg-muted" />
+        </div>
+      </div>
+    );
   }
 
-  if (!list) {
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-20">
+        <h1 className="font-display text-2xl font-bold">No pudimos cargar la lista</h1>
+        <p className="mt-2 text-muted-foreground">Comprueba tu conexión e inténtalo de nuevo.</p>
+        <div className="mt-6 flex gap-3">
+          <Button onClick={() => refetch()}>Reintentar</Button>
+          <Button asChild variant="outline">
+            <Link to="/top">Ver todas las listas</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!list || !list.published) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-20">
         <h1 className="font-display text-2xl font-bold">Lista no encontrada</h1>
+        <p className="mt-2 text-muted-foreground">
+          Puede que se haya retirado o que el enlace no sea correcto.
+        </p>
         <Button asChild className="mt-6">
           <Link to="/top">Ver todas las listas</Link>
         </Button>
@@ -47,6 +74,7 @@ function TopListPage() {
   }
 
   const items = [...(list.top_list_items ?? [])].sort((a, b) => a.position - b.position);
+  const resolved = items.filter((item) => (products ?? []).some((p) => p.id === item.product_id));
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-14">
