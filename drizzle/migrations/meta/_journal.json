@@ -29,6 +29,13 @@
       "when": 1788330930755,
       "tag": "0003_content_reviews_alerts_toplists",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788653166938,
+      "tag": "0004_add_top_lists_cover_image",
+      "breakpoints": true
     }
   ]
 }

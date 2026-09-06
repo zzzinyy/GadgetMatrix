@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { blogPostQuery } from "@/lib/content";
 import { ShareButtons } from "@/components/ProductActions";
+import { RichContent } from "@/components/RichContent";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/blog/$slug")({
@@ -67,35 +68,64 @@ function BlogPostPage() {
   }
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-14">
-      <nav className="text-sm text-muted-foreground">
-        <Link to="/blog" className="hover:text-foreground">
-          Blog
-        </Link>
-        <span className="px-2">/</span>
-        <span className="text-foreground">{post.title}</span>
-      </nav>
-
-      <h1 className="mt-6 font-display text-3xl font-bold">{post.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {new Date(post.published_at).toLocaleDateString("es-ES")}
-        {post.tags.length > 0 ? ` · ${post.tags.join(", ")}` : ""}
-      </p>
+    <article className="pb-16">
+      <header className="relative overflow-hidden border-b border-border">
+        {post.cover_image_url ? (
+          <img
+            src={post.cover_image_url}
+            alt={post.title}
+            className="absolute inset-0 size-full object-cover opacity-30"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-linear-to-br from-primary/25 via-accent/15 to-transparent" />
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/80 to-background/40" />
+        <div className="relative mx-auto max-w-3xl px-4 py-16">
+          <nav className="text-sm text-muted-foreground">
+            <Link to="/blog" className="hover:text-foreground">
+              Blog
+            </Link>
+            <span className="px-2">/</span>
+            <span className="text-foreground">{post.title}</span>
+          </nav>
+          <h1 className="mt-6 font-display text-3xl font-bold sm:text-4xl">{post.title}</h1>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+            <span className="rounded-full bg-primary/15 px-3 py-1 font-medium text-primary">
+              {new Date(post.published_at).toLocaleDateString("es-ES", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
+            {post.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-border bg-card px-3 py-1 text-muted-foreground"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </header>
 
       {post.cover_image_url ? (
-        <img
-          src={post.cover_image_url}
-          alt={post.title}
-          className="mt-6 aspect-16/9 w-full rounded-2xl border border-border object-cover"
-        />
+        <div className="mx-auto -mt-8 max-w-3xl px-4">
+          <img
+            src={post.cover_image_url}
+            alt={post.title}
+            className="aspect-16/9 w-full rounded-2xl border border-border object-cover shadow-lg"
+          />
+        </div>
       ) : null}
 
-      <p className="mt-6 text-lg text-muted-foreground">{post.excerpt}</p>
-      <div className="mt-6 whitespace-pre-line leading-relaxed text-muted-foreground">
-        {post.content}
+      <div className="mx-auto max-w-3xl px-4">
+        <p className="mt-10 border-l-4 border-primary pl-4 text-lg leading-8 text-foreground/90">
+          {post.excerpt}
+        </p>
+        <RichContent text={post.content} className="mt-6" />
+        <ShareButtons title={post.title} />
       </div>
-
-      <ShareButtons title={post.title} />
     </article>
   );
 }

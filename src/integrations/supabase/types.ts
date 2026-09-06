@@ -379,6 +379,7 @@ export type Database = {
       }
       top_lists: {
         Row: {
+          cover_image_url: string | null
           created_at: string
           description: string
           id: string
@@ -389,6 +390,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          cover_image_url?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -399,6 +401,7 @@ export type Database = {
           title: string
         }
         Update: {
+          cover_image_url?: string | null
           created_at?: string
           description?: string
           id?: string
