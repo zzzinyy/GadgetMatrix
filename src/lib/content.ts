@@ -20,6 +20,7 @@ export type TopList = {
   title: string;
   subtitle: string;
   description: string;
+  cover_image_url: string | null;
   published: boolean;
   position: number;
 };
