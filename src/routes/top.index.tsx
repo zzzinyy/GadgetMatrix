@@ -46,14 +46,32 @@ function TopListsPage() {
               key={list.id}
               to="/top/$slug"
               params={{ slug: list.slug }}
-              className="glow-card rounded-xl border border-border bg-card p-6"
+              className="glow-card flex flex-col overflow-hidden rounded-xl border border-border bg-card"
             >
-              <h2 className="font-display text-xl font-semibold">{list.title}</h2>
-              <p className="mt-1 text-sm text-primary">{list.subtitle}</p>
-              <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{list.description}</p>
-              <p className="mt-4 text-sm text-muted-foreground">
-                {list.top_list_items?.length ?? 0} productos →
-              </p>
+              <div className="relative aspect-21/9 w-full overflow-hidden bg-surface">
+                {list.cover_image_url ? (
+                  <img
+                    src={list.cover_image_url}
+                    alt={list.title}
+                    loading="lazy"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center bg-linear-to-br from-accent/25 via-primary/15 to-transparent">
+                    <Trophy className="size-10 text-accent/70" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-1 flex-col p-6">
+                <h2 className="font-display text-xl font-semibold">{list.title}</h2>
+                <p className="mt-1 text-sm font-medium text-primary">{list.subtitle}</p>
+                <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">
+                  {list.description}
+                </p>
+                <p className="mt-4 text-sm font-medium text-accent">
+                  {list.top_list_items?.length ?? 0} productos →
+                </p>
+              </div>
             </Link>
           ))}
         </div>
