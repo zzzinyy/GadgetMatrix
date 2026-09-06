@@ -5,6 +5,7 @@ import { topListsQuery } from "@/lib/content";
 import { affiliateTagQuery, affiliateUrl, formatPrice, productsQuery } from "@/lib/catalog";
 import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
+import { RichContent } from "@/components/RichContent";
 
 export const Route = createFileRoute("/top/$slug")({
   head: ({ params }) => ({
@@ -86,9 +87,17 @@ function TopListPage() {
         <span className="text-foreground">{list.title}</span>
       </nav>
 
-      <h1 className="mt-6 font-display text-3xl font-bold">{list.title}</h1>
-      <p className="mt-2 text-primary">{list.subtitle}</p>
-      <p className="mt-4 whitespace-pre-line text-muted-foreground">{list.description}</p>
+      {list.cover_image_url ? (
+        <img
+          src={list.cover_image_url}
+          alt={list.title}
+          className="mt-6 aspect-16/9 w-full rounded-2xl border border-border object-cover"
+        />
+      ) : null}
+
+      <h1 className="mt-6 font-display text-3xl font-bold sm:text-4xl">{list.title}</h1>
+      <p className="mt-2 font-medium text-primary">{list.subtitle}</p>
+      <RichContent text={list.description} className="mt-2" />
 
       {resolved.length === 0 ? (
         <p className="mt-10 text-muted-foreground">
