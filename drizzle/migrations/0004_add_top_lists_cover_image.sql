@@ -1,0 +1,1 @@
+ALTER TABLE public.top_lists ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
