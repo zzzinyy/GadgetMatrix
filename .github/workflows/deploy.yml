@@ -36,6 +36,12 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Ensure index.html exists
+        run: |
+          if [ -f .output/public/200.html ] && [ ! -f .output/public/index.html ]; then
+            cp .output/public/200.html .output/public/index.html
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
