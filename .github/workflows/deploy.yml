@@ -36,6 +36,18 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Ensure index.html exists
+        run: |
+          if [ -d .output/public ]; then
+            cd .output/public
+            if [ ! -f index.html ]; then
+              FIRST_HTML=$(ls *.html 2>/dev/null | head -n 1)
+              if [ -n "$FIRST_HTML" ]; then
+                cp "$FIRST_HTML" index.html
+              fi
+            fi
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
