@@ -1,3 +1,4 @@
+```tsx
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -81,7 +82,7 @@ function AuthPage() {
           ...parsed.data,
           options: {
             emailRedirectTo:
-              "https://zzinny.github.io/GadgetMatrix/admin",
+              "https://zzzinyy.github.io/GadgetMatrix/admin",
           },
         });
 
@@ -105,7 +106,7 @@ function AuthPage() {
 
     try {
       const redirectTo =
-        "https://zzinny.github.io/GadgetMatrix/admin";
+        "https://zzzinyy.github.io/GadgetMatrix/admin";
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -219,3 +220,4 @@ function AuthPage() {
     </div>
   );
 }
+```
