@@ -1,15 +1,12 @@
+```tsx
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Bot, Loader2, Send, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
-
-interface AiMessage {
-  role: "user" | "assistant";
-  content: string;
-}
+import { runAdminAgent, type AiMessage } from "@/lib/ai-admin.functions";
 
 const SUGGESTIONS = [
   "Crea una lista Top con los 3 mejores gadgets para teletrabajo",
@@ -21,43 +18,34 @@ export function AiCopilot() {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState("");
   const queryClient = useQueryClient();
+  const callAgent = useServerFn(runAdminAgent);
 
   const mutation = useMutation({
-    mutationFn: async (next: AiMessage[]) => {
-      const { data, error } = await supabase.functions.invoke(
-        "admin-copilot",
-        {
-          body: {
-            messages: next,
-          },
-        },
-      );
-
-      if (error) {
-        throw new Error(error.message || "No se pudo contactar con el Copiloto.");
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      return data as { message: string };
-    },
+    mutationFn: (next: AiMessage[]) =>
+      callAgent({ data: { messages: next } }),
 
     onSuccess: (result) => {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: result.message,
+          content: result.reply,
         },
       ]);
 
-      queryClient.invalidateQueries();
+      if (result.actions.length > 0) {
+        toast.success(
+          `Cambios aplicados: ${result.actions.length}`,
+        );
+
+        queryClient.invalidateQueries();
+      }
     },
 
     onError: (error: Error) => {
-      toast.error(error.message || "La IA no ha podido responder.");
+      toast.error(
+        error.message || "La IA no ha podido responder.",
+      );
     },
   });
 
@@ -95,8 +83,8 @@ export function AiCopilot() {
           </h2>
 
           <p className="text-sm text-muted-foreground">
-            Pídele ayuda para gestionar GadgetMatrix con inteligencia
-            artificial.
+            Pídele que cree productos, fichas técnicas, artículos o
+            listas Top: los aplica en la base de datos.
           </p>
         </div>
       </div>
@@ -140,7 +128,7 @@ export function AiCopilot() {
         {mutation.isPending ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
-            Pensando…
+            Trabajando…
           </p>
         ) : null}
       </div>
@@ -165,13 +153,10 @@ export function AiCopilot() {
           disabled={mutation.isPending}
           className="self-end"
         >
-          {mutation.isPending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Send className="size-4" />
-          )}
+          <Send className="size-4" />
         </Button>
       </div>
     </section>
   );
 }
+```
