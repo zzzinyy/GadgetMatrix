@@ -4,7 +4,14 @@ export default defineConfig({
   vite: {
     base: "./",
   },
+
   tanstackStart: {
     server: { entry: "server" },
+
+    prerender: {
+      enabled: true,
+      crawlLinks: true,
+      autoSubfolderIndex: true,
+    },
   },
 });
