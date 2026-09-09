@@ -1,12 +1,7 @@
-import { createStartHandler } from "@tanstack/react-start/server";
-import { getRouterManifest } from "@tanstack/react-router/ssr/server";
-import { createRouter } from "./src/router";
+import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 
-const handler = createStartHandler({
-  createRouter,
-  getRouterManifest,
+export default createServerEntry({
+  fetch(request) {
+    return handler.fetch(request);
+  },
 });
-
-export default {
-  fetch: handler,
-};
