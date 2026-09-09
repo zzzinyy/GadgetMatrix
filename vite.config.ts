@@ -11,7 +11,6 @@ export default defineConfig({
       crawlLinks: true,
       autoStaticPathsDiscovery: true,
       autoSubfolderIndex: true,
-      exclude: ["/auth"],
     },
   },
 });
