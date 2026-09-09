@@ -5,15 +5,9 @@ export default defineConfig({
   vite: {
     base: "/GadgetMatrix/",
   },
-
   tanstackStart: {
-    spa: {
-      enabled: true,
-      prerender: {
-        outputPath: "/_shell.html",
-        crawlLinks: false,
-        retryCount: 0,
-      },
+    prerender: {
+      enabled: false,
     },
   },
 });
