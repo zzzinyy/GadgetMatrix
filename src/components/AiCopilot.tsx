@@ -6,7 +6,10 @@ import { Bot, Loader2, Send, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { runAdminAgent, type AiMessage } from "@/lib/ai-admin.functions";
+import {
+  runAdminAgent,
+  type AiMessage,
+} from "@/lib/ai-admin.functions";
 
 const SUGGESTIONS = [
   "Crea una lista Top con los 3 mejores gadgets para teletrabajo",
@@ -22,7 +25,11 @@ export function AiCopilot() {
 
   const mutation = useMutation({
     mutationFn: (next: AiMessage[]) =>
-      callAgent({ data: { messages: next } }),
+      callAgent({
+        data: {
+          messages: next,
+        },
+      }),
 
     onSuccess: (result) => {
       setMessages((prev) => [
@@ -35,7 +42,7 @@ export function AiCopilot() {
 
       if (result.actions.length > 0) {
         toast.success(
-          `Cambios aplicados: ${result.actions.length}`,
+          "Cambios aplicados: " + result.actions.length,
         );
 
         queryClient.invalidateQueries();
