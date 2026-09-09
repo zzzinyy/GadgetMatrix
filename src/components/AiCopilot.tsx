@@ -1,4 +1,3 @@
-```tsx
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -166,4 +165,3 @@ export function AiCopilot() {
     </section>
   );
 }
-```
