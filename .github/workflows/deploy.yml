@@ -37,22 +37,9 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Check build output
+      - name: Create GitHub Pages fallback
         run: |
-          echo "Contenido de .output/public:"
-          find .output/public -maxdepth 2 -type f | sort
-
-      - name: Ensure index.html exists
-        run: |
-          if [ -d .output/public ]; then
-            cd .output/public
-            if [ ! -f index.html ]; then
-              FIRST_HTML=$(find . -maxdepth 1 -name "*.html" -type f | head -n 1)
-              if [ -n "$FIRST_HTML" ]; then
-                cp "$FIRST_HTML" index.html
-              fi
-            fi
-          fi
+          cp .output/public/index.html .output/public/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
