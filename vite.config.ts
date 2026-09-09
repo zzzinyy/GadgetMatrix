@@ -1,3 +1,4 @@
+```ts
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
@@ -6,11 +7,14 @@ export default defineConfig({
   },
 
   tanstackStart: {
-    prerender: {
+    spa: {
       enabled: true,
-      crawlLinks: true,
-      autoStaticPathsDiscovery: true,
-      autoSubfolderIndex: true,
+      prerender: {
+        outputPath: "/_shell.html",
+        crawlLinks: false,
+        retryCount: 0,
+      },
     },
   },
 });
+```
