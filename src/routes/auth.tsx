@@ -18,7 +18,10 @@ export const Route = createFileRoute("/auth")({
         content:
           "Inicia sesión para gestionar los productos y fichas técnicas de GadgetMatrix.",
       },
-      { property: "og:title", content: "Acceso administrador | GadgetMatrix" },
+      {
+        property: "og:title",
+        content: "Acceso administrador | GadgetMatrix",
+      },
       {
         property: "og:description",
         content: "Panel de gestión del catálogo.",
@@ -43,6 +46,7 @@ const schema = z.object({
 function AuthPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
+
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,10 +58,24 @@ function AuthPage() {
     }
   }, [session, navigate]);
 
-  async function onSubmit(e: React.FormEvent) {
+  function toggleMode() {
+    if (busy) return;
+
+    setMode((currentMode) =>
+      currentMode === "login" ? "signup" : "login"
+    );
+
+    setEmail("");
+    setPassword("");
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const parsed = schema.safeParse({ email, password });
+    const parsed = schema.safeParse({
+      email,
+      password,
+    });
 
     if (!parsed.success) {
       toast.error(
@@ -74,7 +92,9 @@ function AuthPage() {
           parsed.data
         );
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         toast.success("Sesión iniciada");
       } else {
@@ -86,9 +106,16 @@ function AuthPage() {
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-        toast.success("Cuenta creada. Ya puedes iniciar sesión.");
+        toast.success(
+          "Cuenta creada. Ya puedes iniciar sesión."
+        );
+
+        setMode("login");
+        setPassword("");
       }
     } catch (err) {
       toast.error(
@@ -108,12 +135,13 @@ function AuthPage() {
       const redirectTo =
         "https://zzzinyy.github.io/GadgetMatrix/admin";
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-        },
-      });
+      const { data, error } =
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo,
+          },
+        });
 
       if (error) {
         throw error;
@@ -128,6 +156,7 @@ function AuthPage() {
           ? err.message
           : "No se pudo iniciar sesión con Google"
       );
+
       setBusy(false);
     }
   }
@@ -185,9 +214,7 @@ function AuthPage() {
           className="w-full"
           disabled={busy}
         >
-          {mode === "login"
-            ? "Entrar"
-            : "Registrarme"}
+          {mode === "login" ? "Entrar" : "Registrarme"}
         </Button>
 
         <Button
@@ -202,15 +229,9 @@ function AuthPage() {
 
         <button
           type="button"
-          onClick={() =>
-            setMode(
-              mode === "login"
-                ? "signup"
-                : "login"
-            )
-          }
-          className="w-full text-sm text-muted-foreground hover:text-foreground"
+          onClick={toggleMode}
           disabled={busy}
+          className="block w-full cursor-pointer rounded-md p-3 text-center text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           {mode === "login"
             ? "¿No tienes cuenta? Regístrate"
@@ -221,3 +242,7 @@ function AuthPage() {
   );
 }
 ```
+
+**Importante:** en tu caso hay otro problema distinto que debemos arreglar después: el error `TypeError: "" is not a function` de `vite.config.ts` y el `mod.fetch is not a function`. **No lo vamos a solucionar tocando más el botón de login.**
+
+Primero pega este archivo, haz commit/push y ejecuta el build. Si vuelve a salir la cruz roja, pásame **solo el nuevo error del build** y seguimos desde ahí.
