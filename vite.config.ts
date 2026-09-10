@@ -1,7 +1,7 @@
-```ts
 import { defineConfig } from "vite";
 
-export default defineConfig({
+const config = defineConfig({
   base: "/GadgetMatrix/",
 });
-```
+
+export default config;
