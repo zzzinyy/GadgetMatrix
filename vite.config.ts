@@ -1,5 +1,9 @@
 ```ts
-export default {
-  base: "/GadgetMatrix/",
-};
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+
+export default defineConfig({
+  vite: {
+    base: "/GadgetMatrix/",
+  },
+});
 ```
