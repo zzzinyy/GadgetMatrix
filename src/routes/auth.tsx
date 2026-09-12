@@ -1,4 +1,3 @@
-```tsx
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,10 +17,7 @@ export const Route = createFileRoute("/auth")({
         content:
           "Inicia sesión para gestionar los productos y fichas técnicas de GadgetMatrix.",
       },
-      {
-        property: "og:title",
-        content: "Acceso administrador | GadgetMatrix",
-      },
+      { property: "og:title", content: "Acceso administrador | GadgetMatrix" },
       {
         property: "og:description",
         content: "Panel de gestión del catálogo.",
@@ -46,11 +42,6 @@ const schema = z.object({
 function AuthPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
-
-  function getAdminRedirectUrl() {
-    return `${window.location.origin}/GadgetMatrix/admin`;
-  }
-
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,24 +53,10 @@ function AuthPage() {
     }
   }, [session, navigate]);
 
-  function toggleMode() {
-    if (busy) return;
-
-    setMode((currentMode) =>
-      currentMode === "login" ? "signup" : "login"
-    );
-
-    setEmail("");
-    setPassword("");
-  }
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const parsed = schema.safeParse({
-      email,
-      password,
-    });
+    const parsed = schema.safeParse({ email, password });
 
     if (!parsed.success) {
       toast.error(
@@ -96,29 +73,21 @@ function AuthPage() {
           parsed.data
         );
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         toast.success("Sesión iniciada");
       } else {
         const { error } = await supabase.auth.signUp({
           ...parsed.data,
           options: {
-            emailRedirectTo: getAdminRedirectUrl(),
+            emailRedirectTo:
+              "https://zzinny.github.io/GadgetMatrix/admin",
           },
         });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
-        toast.success(
-          "Cuenta creada. Ya puedes iniciar sesión."
-        );
-
-        setMode("login");
-        setPassword("");
+        toast.success("Cuenta creada. Ya puedes iniciar sesión.");
       }
     } catch (err) {
       toast.error(
@@ -135,13 +104,15 @@ function AuthPage() {
     setBusy(true);
 
     try {
-      const { data, error } =
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: getAdminRedirectUrl(),
-          },
-        });
+      const redirectTo =
+        "https://zzinny.github.io/GadgetMatrix/admin";
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+        },
+      });
 
       if (error) {
         throw error;
@@ -156,7 +127,6 @@ function AuthPage() {
           ? err.message
           : "No se pudo iniciar sesión con Google"
       );
-
       setBusy(false);
     }
   }
@@ -214,7 +184,9 @@ function AuthPage() {
           className="w-full"
           disabled={busy}
         >
-          {mode === "login" ? "Entrar" : "Registrarme"}
+          {mode === "login"
+            ? "Entrar"
+            : "Registrarme"}
         </Button>
 
         <Button
@@ -229,9 +201,15 @@ function AuthPage() {
 
         <button
           type="button"
-          onClick={toggleMode}
+          onClick={() =>
+            setMode(
+              mode === "login"
+                ? "signup"
+                : "login"
+            )
+          }
+          className="w-full text-sm text-muted-foreground hover:text-foreground"
           disabled={busy}
-          className="block w-full cursor-pointer rounded-md p-3 text-center text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           {mode === "login"
             ? "¿No tienes cuenta? Regístrate"
@@ -241,8 +219,3 @@ function AuthPage() {
     </div>
   );
 }
-```
-
-**Importante:** en tu caso hay otro problema distinto que debemos arreglar después: el error `TypeError: "" is not a function` de `vite.config.ts` y el `mod.fetch is not a function`. **No lo vamos a solucionar tocando más el botón de login.**
-
-Primero pega este archivo, haz commit/push y ejecuta el build. Si vuelve a salir la cruz roja, pásame **solo el nuevo error del build** y seguimos desde ahí.

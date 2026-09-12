@@ -4,7 +4,13 @@ export default defineConfig({
   vite: {
     base: "/GadgetMatrix/",
   },
+
   tanstackStart: {
-    server: { entry: "server" },
+    prerender: {
+      enabled: true,
+      crawlLinks: true,
+      autoStaticPathsDiscovery: true,
+      autoSubfolderIndex: true,
+    },
   },
 });
