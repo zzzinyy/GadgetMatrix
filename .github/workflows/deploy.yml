@@ -41,6 +41,7 @@ jobs:
 
       - name: Create GitHub Pages fallback
         run: |
+          find .output/public -type f -name '*.html' -print0 | xargs -0 perl -0pi -e 's#<link rel="modulepreload" href="[^"]*virtual:tanstack-start-dev-client-entry"[^>]*>##g'
           cp .output/public/index.html .output/public/404.html
 
       - name: Upload artifact
