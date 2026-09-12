@@ -100,37 +100,6 @@ function AuthPage() {
     }
   }
 
-  async function onGoogle() {
-    setBusy(true);
-
-    try {
-      const redirectTo =
-        "https://zzzinyy.github.io/GadgetMatrix/admin";
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "No se pudo iniciar sesión con Google"
-      );
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="mx-auto flex max-w-md flex-col px-4 py-20">
       <h1 className="font-display text-2xl font-bold">
@@ -187,16 +156,6 @@ function AuthPage() {
           {mode === "login"
             ? "Entrar"
             : "Registrarme"}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={onGoogle}
-          disabled={busy}
-        >
-          Continuar con Google
         </Button>
 
         <button
