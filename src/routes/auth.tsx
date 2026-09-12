@@ -81,7 +81,7 @@ function AuthPage() {
           ...parsed.data,
           options: {
             emailRedirectTo:
-              "https://zzinny.github.io/GadgetMatrix/admin",
+              "https://zzzinyy.github.io/GadgetMatrix/admin",
           },
         });
 
@@ -105,7 +105,7 @@ function AuthPage() {
 
     try {
       const redirectTo =
-        "https://zzinny.github.io/GadgetMatrix/admin";
+        "https://zzzinyy.github.io/GadgetMatrix/admin";
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
