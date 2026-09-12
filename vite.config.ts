@@ -6,10 +6,13 @@ export default defineConfig({
   base: "/GadgetMatrix/",
   plugins: [
     tanstackStart({
-      prerender: {
+      spa: {
         enabled: true,
-        crawlLinks: false,
-        failOnError: true,
+        prerender: {
+          outputPath: "/index.html",
+          crawlLinks: false,
+          retryCount: 0,
+        },
       },
     }),
     viteReact(),
