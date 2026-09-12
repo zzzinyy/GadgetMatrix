@@ -1,5 +1,7 @@
 name: Deploy to GitHub Pages
 
+# Rebuild the Pages artifact after deployment fixes.
+
 on:
   push:
     branches: ["main"]
