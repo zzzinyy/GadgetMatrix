@@ -5,6 +5,7 @@ import { nitro } from "nitro/vite";
 import viteReact from "@vitejs/plugin-react";
 
 export default defineConfig({
+  base: "/GadgetMatrix/",
   plugins: [
     tanstackStart(),
     nitro(),

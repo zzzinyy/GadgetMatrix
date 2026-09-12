@@ -47,6 +47,10 @@ function AuthPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
 
+  function getAdminRedirectUrl() {
+    return `${window.location.origin}/GadgetMatrix/admin`;
+  }
+
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -101,8 +105,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           ...parsed.data,
           options: {
-            emailRedirectTo:
-              "https://zzzinyy.github.io/GadgetMatrix/admin",
+            emailRedirectTo: getAdminRedirectUrl(),
           },
         });
 
@@ -132,14 +135,11 @@ function AuthPage() {
     setBusy(true);
 
     try {
-      const redirectTo =
-        "https://zzzinyy.github.io/GadgetMatrix/admin";
-
       const { data, error } =
         await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo,
+            redirectTo: getAdminRedirectUrl(),
           },
         });
 
