@@ -283,9 +283,13 @@ export const runAdminAgent = createServerFn({ method: "POST" })
           if (error) return { ok: false, detail: error.message };
 
           const specs = (args["specs"] as { label: string; value: string }[] | undefined) ?? [];
+          const { error: deleteSpecsError } = await supabaseAdmin
+            .from("product_specs")
+            .delete()
+            .eq("product_id", product.id);
+          if (deleteSpecsError) return { ok: false, detail: deleteSpecsError.message };
           if (specs.length > 0) {
-            await supabaseAdmin.from("product_specs").delete().eq("product_id", product.id);
-            await supabaseAdmin.from("product_specs").insert(
+            const { error: insertSpecsError } = await supabaseAdmin.from("product_specs").insert(
               specs.map((spec, index) => ({
                 product_id: product.id,
                 label: spec.label,
@@ -293,6 +297,7 @@ export const runAdminAgent = createServerFn({ method: "POST" })
                 position: index + 1,
               })),
             );
+            if (insertSpecsError) return { ok: false, detail: insertSpecsError.message };
           }
           actions.push(`Producto guardado: ${slug}`);
           return { ok: true, detail: `producto ${slug} guardado` };
@@ -353,7 +358,11 @@ export const runAdminAgent = createServerFn({ method: "POST" })
           if (error) return { ok: false, detail: error.message };
 
           const items = (args["items"] as { product_slug: string; note?: string }[]) ?? [];
-          await supabaseAdmin.from("top_list_items").delete().eq("list_id", list.id);
+          const { error: deleteItemsError } = await supabaseAdmin
+            .from("top_list_items")
+            .delete()
+            .eq("list_id", list.id);
+          if (deleteItemsError) return { ok: false, detail: deleteItemsError.message };
           const rows: { list_id: string; product_id: string; position: number; note: string }[] = [];
           for (const [index, item] of items.entries()) {
             const { data: product } = await supabaseAdmin
@@ -370,7 +379,12 @@ export const runAdminAgent = createServerFn({ method: "POST" })
               });
             }
           }
-          if (rows.length > 0) await supabaseAdmin.from("top_list_items").insert(rows);
+          if (rows.length > 0) {
+            const { error: insertItemsError } = await supabaseAdmin
+              .from("top_list_items")
+              .insert(rows);
+            if (insertItemsError) return { ok: false, detail: insertItemsError.message };
+          }
           actions.push(`Lista Top guardada: ${String(args["slug"])} (${rows.length} productos)`);
           return { ok: true, detail: `lista guardada con ${rows.length} productos` };
         }

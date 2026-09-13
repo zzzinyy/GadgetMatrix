@@ -166,7 +166,11 @@ export function AdminContent() {
         listId = data.id;
       }
 
-      await supabase.from("top_list_items").delete().eq("list_id", listId);
+      const { error: deleteItemsError } = await supabase
+        .from("top_list_items")
+        .delete()
+        .eq("list_id", listId);
+      if (deleteItemsError) throw deleteItemsError;
       if (state.productIds.length > 0) {
         const rows = state.productIds.map((productId, index) => ({
           list_id: listId as string,

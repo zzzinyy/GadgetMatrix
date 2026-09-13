@@ -80,8 +80,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           ...parsed.data,
           options: {
-            emailRedirectTo:
-              "https://zzzinyy.github.io/GadgetMatrix/admin",
+            emailRedirectTo: `${window.location.origin}/GadgetMatrix/#/admin`,
           },
         });
 

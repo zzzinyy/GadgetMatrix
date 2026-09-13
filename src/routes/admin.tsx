@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AdminStats } from "@/components/AdminStats";
+import { AdminContent } from "@/components/AdminContent";
 import { AiCopilot } from "@/components/AiCopilot";
 import {
   affiliateTagQuery,
@@ -153,7 +154,11 @@ function AdminPage() {
         productId = data.id;
       }
 
-      await supabase.from("product_specs").delete().eq("product_id", productId);
+      const { error: deleteSpecsError } = await supabase
+        .from("product_specs")
+        .delete()
+        .eq("product_id", productId);
+      if (deleteSpecsError) throw deleteSpecsError;
       const specRows = toLines(state.specs)
         .map((line, index) => {
           const [label, ...rest] = line.split(":");
@@ -292,6 +297,7 @@ function AdminPage() {
 
       <AiCopilot />
 
+      <AdminContent />
 
       <section className="mt-8 rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Tag de afiliado de Amazon</h2>

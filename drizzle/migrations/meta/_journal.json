@@ -36,6 +36,13 @@
       "when": 1788653166938,
       "tag": "0004_add_top_lists_cover_image",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789257600000,
+      "tag": "0005_lock_first_admin_claim",
+      "breakpoints": true
     }
   ]
 }
