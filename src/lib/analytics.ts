@@ -50,7 +50,7 @@ export function buildDailySeries(events: RawEvent[], days: number) {
   for (const event of events) {
     const key = event.created_at.slice(0, 10);
     const bucket = buckets.get(key);
-    if (bucket) bucket[event.event_type] += 1;
+    if (bucket && (event.event_type === "view" || event.event_type === "card_click" || event.event_type === "affiliate_click")) bucket[event.event_type] += 1;
   }
   return [...buckets.values()].map((b) => ({
     ...b,
@@ -71,6 +71,7 @@ export function buildProductTotals(
   >();
   for (const event of events) {
     if (!event.product_id) continue;
+    if (event.event_type !== "view" && event.event_type !== "card_click" && event.event_type !== "affiliate_click") continue;
     const current =
       totals.get(event.product_id) ??
       {

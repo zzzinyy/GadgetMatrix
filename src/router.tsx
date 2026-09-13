@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { createHashHistory, createRouter } from "@tanstack/react-router";
+import { createHashHistory, createMemoryHistory, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
@@ -8,7 +8,11 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     basepath: "/GadgetMatrix",
-    history: createHashHistory(),
+    // createHashHistory usa `window`: en SSR/prerender hay que usar memoria.
+    history:
+      typeof window !== "undefined"
+        ? createHashHistory()
+        : createMemoryHistory({ initialEntries: ["/GadgetMatrix/"] }),
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,

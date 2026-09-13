@@ -49,10 +49,14 @@ export function ShareButtons({ title }: { title: string }) {
         variant="outline"
         size="sm"
         onClick={async () => {
-          await navigator.clipboard.writeText(url);
-          setCopied(true);
-          toast.success("Enlace copiado");
-          setTimeout(() => setCopied(false), 2000);
+          try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            toast.success("Enlace copiado");
+            setTimeout(() => setCopied(false), 2000);
+          } catch {
+            toast.error("No se pudo copiar el enlace.");
+          }
         }}
       >
         {copied ? <Check className="size-4" /> : <Link2 className="size-4" />}
@@ -68,11 +72,12 @@ export function PriceAlert({ productId, price }: { productId: string; price: num
 
   const create = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("Debes iniciar sesión");
       const value = Number(target);
       if (!Number.isFinite(value) || value <= 0) throw new Error("precio no válido");
       const { error } = await supabase
         .from("price_alerts")
-        .insert({ product_id: productId, target_price: value });
+        .insert({ product_id: productId, user_id: user.id, target_price: value });
       if (error) throw error;
     },
     onSuccess: () => toast.success("Te avisaremos cuando baje de ese precio."),

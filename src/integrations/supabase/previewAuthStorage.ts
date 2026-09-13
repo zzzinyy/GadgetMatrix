@@ -23,7 +23,10 @@ export function brokeredPreviewStorage() {
   const EDITOR = dev
     ? /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$|^http:\/\/localhost:3000$/
     : /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$/;
-  const ancestor = (location.ancestorOrigins && location.ancestorOrigins[0]) || (document.referrer ? new URL(document.referrer).origin : '');
+  const ancestor =
+    (typeof location.ancestorOrigins !== "undefined"
+      ? (location as unknown as { ancestorOrigins?: string[] }).ancestorOrigins?.[0]
+      : undefined) || (document.referrer ? new URL(document.referrer).origin : '');
   const editorOrigins = ancestor && EDITOR.test(ancestor)
     ? [ancestor]
     : (dev ? ['https://lovable.dev', 'http://localhost:3000'] : ['https://lovable.dev']);

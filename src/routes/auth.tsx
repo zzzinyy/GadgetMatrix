@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -53,7 +54,7 @@ function AuthPage() {
     }
   }, [session, navigate]);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
 
     const parsed = schema.safeParse({ email, password });
@@ -80,7 +81,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           ...parsed.data,
           options: {
-            emailRedirectTo: `${window.location.origin}/GadgetMatrix/#/admin`,
+            emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}#/admin`,
           },
         });
 

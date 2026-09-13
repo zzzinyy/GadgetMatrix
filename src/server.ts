@@ -5,18 +5,24 @@ import {
 
 const handler = createStartHandler(defaultStreamHandler);
 
-export default (event: any) => {
-  const response = handler(event);
-  
-  // Add security headers if it's a Response object
+export default async (event: Parameters<typeof handler>[0]) => {
+  const response = await handler(event);
+
+  // Add security headers if it's a Response object (clone: original headers can be immutable)
   if (response instanceof Response) {
-    response.headers.set("X-Frame-Options", "DENY");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-    response.headers.set("X-Permitted-Cross-Domain-Policies", "none");
+    const headers = new Headers(response.headers);
+    headers.set("X-Frame-Options", "DENY");
+    headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+    headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    headers.set("X-Permitted-Cross-Domain-Policies", "none");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   }
-  
+
   return response;
 };
 

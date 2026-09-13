@@ -4,7 +4,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart,
@@ -14,6 +13,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Cell as RechartsCell,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { buildDailySeries, buildProductTotals, eventsQuery } from "@/lib/analytics";
@@ -150,7 +150,7 @@ export function AdminStats({ products }: { products: ProductWithSpecs[] }) {
                     <PieChart>
                       <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85}>
                         {pieData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.color} />
+                          <RechartsCell key={entry.name} fill={entry.color} />
                         ))}
                       </Pie>
                       <Tooltip contentStyle={tooltipStyle} />

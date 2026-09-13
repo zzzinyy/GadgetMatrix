@@ -30,13 +30,19 @@ export function ProductReviews({ productId }: { productId: string }) {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("Debes iniciar sesión");
       const { error } = await supabase.from("product_reviews").insert({
         product_id: productId,
+        user_id: user.id,
         rating,
         title: title.trim().slice(0, 120),
         body: body.trim().slice(0, 2000),
         author_name:
-          (user?.user_metadata?.["full_name"] as string) ?? user?.email?.split("@")[0] ?? "Usuario",
+          (typeof user.user_metadata?.["full_name"] === "string"
+            ? user.user_metadata["full_name"]
+            : undefined) ??
+          user.email?.split("@")[0] ??
+          "Usuario",
       });
       if (error) throw error;
     },

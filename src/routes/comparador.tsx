@@ -314,7 +314,7 @@ function ComparatorPage() {
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children }: { label: string; children: import("react").ReactNode }) {
   return (
     <tr className="border-t border-border align-top">
       <th className="bg-surface/60 p-4 text-left font-medium text-muted-foreground">{label}</th>
@@ -323,7 +323,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function Cell({ children }: { children: React.ReactNode }) {
+function Cell({ children }: { children: import("react").ReactNode }) {
   return <td className="border-l border-border p-4">{children}</td>;
 }
 

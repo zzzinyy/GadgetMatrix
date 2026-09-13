@@ -163,8 +163,9 @@ function AdminPage() {
         .map((line, index) => {
           const [label, ...rest] = line.split(":");
           const value = rest.join(":").trim();
-          if (!label || !value) return null;
-          return { product_id: productId, label: label.trim(), value, position: index + 1 };
+          const cleanLabel = label?.trim() ?? "";
+          if (!cleanLabel || !value || !productId) return null;
+          return { product_id: productId, label: cleanLabel, value, position: index + 1 };
         })
         .filter((row): row is NonNullable<typeof row> => row !== null);
       if (specRows.length > 0) {
@@ -257,7 +258,9 @@ function AdminPage() {
         <div className="mt-6 flex flex-col gap-3">
           <Button
             onClick={async () => {
-              const { data, error } = await supabase.rpc("claim_first_admin");
+              const { data, error } = await supabase.rpc(
+                "claim_first_admin" as never,
+              );
               if (error) {
                 toast.error(error.message);
                 return;
@@ -498,7 +501,7 @@ function Field({
   className,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: import("react").ReactNode;
   className?: string;
 }) {
   return (

@@ -204,12 +204,12 @@ export const runAdminAgent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data, context }): Promise<{ reply: string; actions: string[] }> => {
-    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", {
+    const adminCheck = (await context.supabase.rpc("has_role" as never, {
       _user_id: context.userId,
       _role: "admin",
-    });
-    if (roleError) throw new Error("No se pudo verificar el rol de administrador.");
-    if (!isAdmin) throw new Error("Solo los administradores pueden usar el copiloto.");
+    } as never)) as unknown as { data: boolean | null; error: { message: string } | null };
+    if (adminCheck.error) throw new Error("No se pudo verificar el rol de administrador.");
+    if (!adminCheck.data) throw new Error("Solo los administradores pueden usar el copiloto.");
 
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) throw new Error("Falta la configuración de la IA.");
@@ -255,22 +255,30 @@ export const runAdminAgent = createServerFn({ method: "POST" })
         }
         case "upsert_product": {
           const slug = String(args["slug"]);
-          const categoryId = await categoryIdFor(args["category_slug"] as string | undefined);
+          const categorySlug =
+            typeof args["category_slug"] === "string" ? args["category_slug"] : undefined;
+          const stringList = (value: unknown): string[] =>
+            Array.isArray(value)
+              ? value.filter((entry): entry is string => typeof entry === "string")
+              : [];
+          const categoryId = await categoryIdFor(categorySlug);
           const payload: Record<string, unknown> = {
             slug,
             name: String(args["name"]),
-            brand: (args["brand"] as string) ?? null,
-            short_description: (args["short_description"] as string) ?? "",
-            description: (args["description"] as string) ?? "",
+            brand: typeof args["brand"] === "string" ? args["brand"] : null,
+            short_description:
+              typeof args["short_description"] === "string" ? args["short_description"] : "",
+            description: typeof args["description"] === "string" ? args["description"] : "",
             price: args["price"] == null ? null : Number(args["price"]),
-            image_url: (args["image_url"] as string) ?? null,
+            image_url: typeof args["image_url"] === "string" ? args["image_url"] : null,
             amazon_url:
-              (args["amazon_url"] as string) ??
-              `https://www.amazon.es/s?k=${encodeURIComponent(String(args["name"]))}`,
+              typeof args["amazon_url"] === "string" && args["amazon_url"]
+                ? args["amazon_url"]
+                : `https://www.amazon.es/s?k=${encodeURIComponent(String(args["name"]))}`,
             rating: args["rating"] == null ? null : Number(args["rating"]),
             featured: Boolean(args["featured"] ?? false),
-            pros: (args["pros"] as string[]) ?? [],
-            cons: (args["cons"] as string[]) ?? [],
+            pros: stringList(args["pros"]),
+            cons: stringList(args["cons"]),
             updated_at: new Date().toISOString(),
           };
           if (categoryId) payload["category_id"] = categoryId;
@@ -282,7 +290,16 @@ export const runAdminAgent = createServerFn({ method: "POST" })
             .single();
           if (error) return { ok: false, detail: error.message };
 
-          const specs = (args["specs"] as { label: string; value: string }[] | undefined) ?? [];
+          const rawSpecs = Array.isArray(args["specs"]) ? args["specs"] : [];
+          const specs = rawSpecs.filter(
+            (spec): spec is { label: string; value: string } =>
+              typeof spec === "object" &&
+              spec !== null &&
+              "label" in spec &&
+              "value" in spec &&
+              typeof (spec as { label: unknown }).label === "string" &&
+              typeof (spec as { value: unknown }).value === "string",
+          );
           const { error: deleteSpecsError } = await supabaseAdmin
             .from("product_specs")
             .delete()
@@ -314,7 +331,8 @@ export const runAdminAgent = createServerFn({ method: "POST" })
             {
               slug: String(args["slug"]),
               name: String(args["name"]),
-              description: (args["description"] as string) ?? null,
+              description:
+                typeof args["description"] === "string" ? args["description"] : null,
             },
             { onConflict: "slug" },
           );
@@ -327,10 +345,13 @@ export const runAdminAgent = createServerFn({ method: "POST" })
             {
               slug: String(args["slug"]),
               title: String(args["title"]),
-              excerpt: (args["excerpt"] as string) ?? "",
+              excerpt: typeof args["excerpt"] === "string" ? args["excerpt"] : "",
               content: String(args["content"]),
-              cover_image_url: (args["cover_image_url"] as string) ?? null,
-              tags: (args["tags"] as string[]) ?? [],
+              cover_image_url:
+                typeof args["cover_image_url"] === "string" ? args["cover_image_url"] : null,
+              tags: Array.isArray(args["tags"])
+                ? args["tags"].filter((tag): tag is string => typeof tag === "string")
+                : [],
               published: args["published"] == null ? true : Boolean(args["published"]),
               updated_at: new Date().toISOString(),
             },
@@ -347,8 +368,8 @@ export const runAdminAgent = createServerFn({ method: "POST" })
               {
                 slug: String(args["slug"]),
                 title: String(args["title"]),
-                subtitle: (args["subtitle"] as string) ?? "",
-                description: (args["description"] as string) ?? "",
+                subtitle: typeof args["subtitle"] === "string" ? args["subtitle"] : "",
+                description: typeof args["description"] === "string" ? args["description"] : "",
                 published: true,
               },
               { onConflict: "slug" },
@@ -357,7 +378,11 @@ export const runAdminAgent = createServerFn({ method: "POST" })
             .single();
           if (error) return { ok: false, detail: error.message };
 
-          const items = (args["items"] as { product_slug: string; note?: string }[]) ?? [];
+          const rawItems = Array.isArray(args["items"]) ? args["items"] : [];
+          const items = rawItems.filter(
+            (item): item is { product_slug: string; note?: string } =>
+              typeof item === "object" && item !== null && "product_slug" in item,
+          );
           const { error: deleteItemsError } = await supabaseAdmin
             .from("top_list_items")
             .delete()
@@ -375,7 +400,7 @@ export const runAdminAgent = createServerFn({ method: "POST" })
                 list_id: list.id,
                 product_id: product.id,
                 position: index + 1,
-                note: item.note ?? "",
+                note: typeof item.note === "string" ? item.note : "",
               });
             }
           }
@@ -433,8 +458,8 @@ export const runAdminAgent = createServerFn({ method: "POST" })
           const summary: Record<string, Record<string, number>> = {};
           for (const event of events ?? []) {
             const key = names.get(event.product_id ?? "") ?? "otros";
-            summary[key] = summary[key] ?? {};
-            summary[key]![event.event_type] = (summary[key]![event.event_type] ?? 0) + 1;
+            const bucket = (summary[key] ??= {});
+            bucket[event.event_type] = (bucket[event.event_type] ?? 0) + 1;
           }
           return { ok: true, detail: `analíticas de ${days} días`, data: summary };
         }

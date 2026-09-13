@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -70,7 +70,7 @@ function Field({
 }: {
   label: string;
   hint?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -152,7 +152,7 @@ export function AdminContent() {
         cover_image_url: cover || null,
         published: state.published,
       };
-      let listId = state.id;
+      let listId: string | null = state.id;
       if (listId) {
         const { error } = await supabase.from("top_lists").update(payload).eq("id", listId);
         if (error) throw error;
@@ -166,14 +166,16 @@ export function AdminContent() {
         listId = data.id;
       }
 
+      if (!listId) throw new Error("No se pudo guardar la lista");
       const { error: deleteItemsError } = await supabase
         .from("top_list_items")
         .delete()
         .eq("list_id", listId);
       if (deleteItemsError) throw deleteItemsError;
       if (state.productIds.length > 0) {
+        const list = listId;
         const rows = state.productIds.map((productId, index) => ({
-          list_id: listId as string,
+          list_id: list,
           product_id: productId,
           position: index + 1,
           note: "",
