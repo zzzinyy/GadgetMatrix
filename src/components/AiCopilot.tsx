@@ -49,8 +49,13 @@ export function AiCopilot() {
     },
 
     onError: (error: Error) => {
+      console.error("[ai-copilot] runAdminAgent failed", error);
+      const raw = error?.message ?? "";
       toast.error(
-        error.message || "La IA no ha podido responder.",
+        raw.includes("Invariant failed")
+          ? "El copiloto necesita un servidor con funciones activas. En GitHub Pages (solo archivos estáticos) no funciona: úsalo en local con npm run dev o en un hosting con servidor (Lovable Cloud, Vercel, Netlify)."
+          : raw || "La IA no ha podido responder. Revisa la consola (F12) para más detalle.",
+        { duration: 8000 },
       );
     },
   });
@@ -91,6 +96,10 @@ export function AiCopilot() {
           <p className="text-sm text-muted-foreground">
             Pídele que cree productos, fichas técnicas, artículos o
             listas Top: los aplica en la base de datos.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground/80">
+            Requiere servidor activo (en local con npm run dev). En GitHub Pages, que es solo
+            estático, no responde.
           </p>
         </div>
       </div>
