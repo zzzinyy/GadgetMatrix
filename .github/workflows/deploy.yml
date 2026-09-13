@@ -40,26 +40,44 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Diagnose dev references in artifact
+      - name: Fix dev entry references in artifact
         run: |
-          echo "--- file types ---"
-          file .output/public/index.html .output/public/auth/index.html || true
-          echo "--- ls public ---"
-          ls -la .output/public | head -30
-          echo "--- context of dev-entry matches in HTML ---"
-          grep -a -o -E '.{0,150}virtual:tanstack-start-dev-client-entry.{0,150}' -r .output/public --include='*.html' | head -20 || true
-          echo "--- context of dev-entry matches in JS ---"
-          grep -a -o -E '.{0,150}virtual:tanstack-start-dev-client-entry.{0,150}' -r .output/public --include='*.js' | head -20 || true
-          echo "--- @id matches ---"
-          grep -a -o -E '.{0,120}/@id/.{0,120}' -r .output/public | head -20 || true
-          echo "--- head of index.html (first 2000 bytes) ---"
-          head -c 2000 .output/public/index.html || true
-          echo ""
-          echo "--- failing check ---"
+          echo "--- assets ---"
+          ls -la .output/public/assets || true
+          echo "--- all JS bundles (size path) ---"
+          find .output/public -name '*.js' -printf '%s %p\n' | sort -rn | head -30
+          JS_LIST=$(find .output/public -name '*.js')
+          if [ -z "$JS_LIST" ]; then
+            echo "::error::No hay ningun bundle JS de cliente en .output/public"
+            exit 1
+          fi
+          echo "--- marker scan (bundle que contiene el runtime del router) ---"
+          MATCHES=$(echo "$JS_LIST" | xargs grep -a -l 'tsr-scroll-restoration' 2>/dev/null || true)
+          echo "marker matches: $MATCHES"
+          ENTRY=$(printf '%s\n' "$MATCHES" | head -n 1)
+          if [ -z "$ENTRY" ]; then
+            echo "Sin marcador, uso el bundle JS mas grande como entrada del cliente"
+            ENTRY=$(find .output/public -name '*.js' -printf '%s %p\n' | sort -rn | head -n 1 | sed 's/^[0-9]* //')
+          fi
+          if [ -z "$ENTRY" ]; then
+            echo "::error::No se pudo identificar el bundle de entrada del cliente"
+            exit 1
+          fi
+          echo "ENTRY=$ENTRY"
+          REL=${ENTRY#.output/public/}
+          export ENTRY_WEB_PATH="/GadgetMatrix/$REL"
+          echo "ENTRY_WEB_PATH=$ENTRY_WEB_PATH"
+          find .output/public -name '*.html' -print0 | xargs -0 perl -pi -e 's#/GadgetMatrix/\@id/virtual:tanstack-start-dev-client-entry#$ENV{ENTRY_WEB_PATH}#g'
+          echo "--- verify ---"
           if grep -a -R "virtual:tanstack-start-dev-client-entry" .output/public; then
             echo "::error::Quedan referencias dev en el artefacto de produccion"
             exit 1
           fi
+          if grep -a -R "/@id/" .output/public; then
+            echo "::error::Quedan rutas /@id/ de Vite dev en el artefacto de produccion"
+            exit 1
+          fi
+          echo "Artefacto limpio: entrada de cliente -> $ENTRY_WEB_PATH"
 
       - name: Create GitHub Pages fallback
         run: cp .output/public/index.html .output/public/404.html
