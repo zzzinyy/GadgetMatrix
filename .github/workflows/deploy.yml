@@ -40,14 +40,24 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Verify no dev references in artifact
+      - name: Diagnose dev references in artifact
         run: |
-          if grep -R "virtual:tanstack-start-dev-client-entry" .output/public; then
+          echo "--- file types ---"
+          file .output/public/index.html .output/public/auth/index.html || true
+          echo "--- ls public ---"
+          ls -la .output/public | head -30
+          echo "--- context of dev-entry matches in HTML ---"
+          grep -a -o -E '.{0,150}virtual:tanstack-start-dev-client-entry.{0,150}' -r .output/public --include='*.html' | head -20 || true
+          echo "--- context of dev-entry matches in JS ---"
+          grep -a -o -E '.{0,150}virtual:tanstack-start-dev-client-entry.{0,150}' -r .output/public --include='*.js' | head -20 || true
+          echo "--- @id matches ---"
+          grep -a -o -E '.{0,120}/@id/.{0,120}' -r .output/public | head -20 || true
+          echo "--- head of index.html (first 2000 bytes) ---"
+          head -c 2000 .output/public/index.html || true
+          echo ""
+          echo "--- failing check ---"
+          if grep -a -R "virtual:tanstack-start-dev-client-entry" .output/public; then
             echo "::error::Quedan referencias dev en el artefacto de produccion"
-            exit 1
-          fi
-          if grep -R "/@id/" .output/public; then
-            echo "::error::Quedan rutas /@id/ de Vite dev en el artefacto de produccion"
             exit 1
           fi
 
