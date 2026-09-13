@@ -1,7 +1,4 @@
 name: Deploy to GitHub Pages
-
-# Rebuild the Pages artifact after deployment fixes.
-
 on:
   push:
     branches: ["main"]
@@ -43,10 +40,19 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Create GitHub Pages fallback
+      - name: Verify no dev references in artifact
         run: |
-          find .output/public -type f -name '*.html' -print0 | xargs -0 perl -0pi -e 's#<link rel="modulepreload" href="[^"]*virtual:tanstack-start-dev-client-entry"[^>]*>##g'
-          cp .output/public/index.html .output/public/404.html
+          if grep -R "virtual:tanstack-start-dev-client-entry" .output/public; then
+            echo "::error::Quedan referencias dev en el artefacto de produccion"
+            exit 1
+          fi
+          if grep -R "/@id/" .output/public; then
+            echo "::error::Quedan rutas /@id/ de Vite dev en el artefacto de produccion"
+            exit 1
+          fi
+
+      - name: Create GitHub Pages fallback
+        run: cp .output/public/index.html .output/public/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

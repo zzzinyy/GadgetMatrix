@@ -81,7 +81,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           ...parsed.data,
           options: {
-            emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}#/admin`,
+            emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}admin`,
           },
         });
 
@@ -90,10 +90,11 @@ function AuthPage() {
         toast.success("Cuenta creada. Ya puedes iniciar sesión.");
       }
     } catch (err) {
+      console.error("[auth] signIn/signUp failed", err);
       toast.error(
-        err instanceof Error
+        err instanceof Error && err.message
           ? err.message
-          : "No se pudo completar la operación"
+          : "No se pudo completar la operación. Revisa la consola (F12) para más detalle."
       );
     } finally {
       setBusy(false);
