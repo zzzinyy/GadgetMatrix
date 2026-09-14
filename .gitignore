@@ -16,6 +16,12 @@ dist-ssr
 .nitro
 *.local
 
+# Variables de entorno con secretos (service role key, API keys).
+# NO se suben nunca al repositorio. Para valores locales usa .env.local (*.local ya esta ignorado).
+.env
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
