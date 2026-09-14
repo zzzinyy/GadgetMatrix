@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { AdminStats } from "@/components/AdminStats";
 import { AdminContent } from "@/components/AdminContent";
+import { AdminImport } from "@/components/AdminImport";
 import { AiCopilot } from "@/components/AiCopilot";
 import {
   affiliateTagQuery,
@@ -301,6 +302,8 @@ function AdminPage() {
       <AiCopilot />
 
       <AdminContent />
+
+      <AdminImport />
 
       <section className="mt-8 rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Tag de afiliado de Amazon</h2>
