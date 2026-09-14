@@ -26,7 +26,7 @@ const TARGETS: { id: TargetId; label: string; hint: string }[] = [
   {
     id: "products",
     label: "Productos",
-    hint: "Crea o actualiza productos por slug. Al reimportar el mismo slug se actualiza, no se duplica.",
+    hint: "Crea o actualiza productos por slug, con marca, categoría, precio, moneda, valoración, imagen, enlace de Amazon, descripciones, pros, contras y ficha técnica. Al reimportar el mismo slug se actualiza, no se duplica.",
   },
   {
     id: "posts",
@@ -40,14 +40,64 @@ const TARGETS: { id: TargetId; label: string; hint: string }[] = [
   },
 ];
 
+/**
+ * Columnas que reconoce cada destino. Se muestran en la interfaz para que no haya
+ * que adivinar los nombres de cabecera.
+ */
+const COLUMN_DOCS: Record<TargetId, { name: string; required: boolean; note?: string }[]> = {
+  products: [
+    { name: "Nombre", required: true, note: "nombre comercial del producto" },
+    {
+      name: "Slug",
+      required: true,
+      note: "identificador único: solo minúsculas, números y guiones",
+    },
+    { name: "Categoría", required: false, note: "nombre o slug de una categoría existente" },
+    { name: "Marca", required: false },
+    { name: "Valoración", required: false, note: "de 0 a 5" },
+    { name: "Precio (EUR)", required: false, note: "acepta 899,99 o 899.99" },
+    { name: "Moneda", required: false, note: "por defecto EUR" },
+    { name: "URL de imagen", required: false, note: "enlace directo a la foto" },
+    {
+      name: "URL de producto en Amazon",
+      required: true,
+      note: "aquí se añade automáticamente tu tag de afiliado",
+    },
+    {
+      name: "Descripción corta",
+      required: false,
+      note: "máx. 200 caracteres, aparece en la tarjeta",
+    },
+    { name: "Análisis completo", required: false, note: "máx. 5000 caracteres" },
+    { name: "Pros", required: false, note: "separa con | (barra vertical)" },
+    { name: "Contras", required: false, note: "separa con | (barra vertical)" },
+    { name: "Ficha técnica", required: false, note: "Etiqueta:valor separados con |" },
+    { name: "Destacado", required: false, note: "si/no, lo marca como recomendado en portada" },
+  ],
+  posts: [
+    { name: "Slug", required: true, note: "identificador único del artículo" },
+    { name: "Título", required: true },
+    { name: "Resumen", required: false, note: "máx. 400 caracteres" },
+    { name: "Contenido", required: false, note: "admite HTML" },
+    { name: "Portada", required: false, note: "URL de la imagen de cabecera" },
+    { name: "Etiquetas", required: false, note: "separa con | o con comas" },
+    { name: "Publicado", required: false, note: "si/no; por defecto se publica" },
+  ],
+  prices: [
+    { name: "Slug", required: true, note: "del producto que ya exista en el catálogo" },
+    { name: "Precio", required: true, note: "precio observado ese día" },
+    { name: "Fecha", required: false, note: "2026-01-15; si se omite, se usa la fecha actual" },
+  ],
+};
+
 /* -------------------------------------------------------------------------- */
 /*  Plantillas descargables                                                    */
 /* -------------------------------------------------------------------------- */
 
 const TEMPLATES: Record<TargetId, string> = {
   products: [
-    "slug,name,brand,category,short_description,description,price,image_url,amazon_url,rating,featured,pros,cons,specs",
-    'portatil-ejemplo,Portátil de Ejemplo,MarcaX,portatiles,Resumen corto para la tarjeta,Descripción larga del producto,899.99,https://images.example.com/foto.jpg,https://www.amazon.es/dp/B0EXAMPLE,4.5,si,Ligero|Buena autonomía,Se calienta mucho,Pantalla:14" OLED|Batería:40 h',
+    "Nombre,Slug,Categoría,Marca,Valoración,Precio (EUR),Moneda,URL de imagen,URL de producto en Amazon,Descripción corta,Análisis completo,Pros,Contras,Ficha técnica,Destacado",
+    '"Portátil de Ejemplo","portatil-ejemplo","portatiles","MarcaX",4.5,899.99,EUR,https://images.example.com/portatil.jpg,https://www.amazon.es/dp/B0EXAMPLE,"Resumen corto que aparece en la tarjeta del producto","Análisis completo del producto: puedes escribir varias frases, con comas y todo, porque el campo va entre comillas.","Ligero|Buena autonomía|Pantalla OLED brillante","Se calienta con carga intensa|Precio elevado","Pantalla:14"" OLED|Batería:40 h|RAM:16 GB|SSD:512 GB",si',
   ].join("\n"),
   posts: [
     "slug,title,excerpt,content,cover_image_url,tags,published",
@@ -60,14 +110,19 @@ const TEMPLATES: Record<TargetId, string> = {
 /*  Utilidades de parseo (puras, sin estado)                                   */
 /* -------------------------------------------------------------------------- */
 
-/** Quita acentos, pasa a minúsculas y convierte espacios/guiones en guion bajo. */
+/**
+ * Normaliza una cabecera: quita acentos, pasa a minúsculas y convierte cualquier
+ * signo de puntuación o espacio en un único guion bajo.
+ * Así "URL de imagen", "url-imagen" y "URL_IMAGEN" acaban todas en "url_imagen".
+ */
 function normalizeKey(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
-    .replace(/[\s-]+/g, "_");
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 /** Detecta si el CSV viene separado por coma o por punto y coma (Excel español). */
@@ -196,14 +251,49 @@ function parseInput(text: string): ParseResult {
   return { records, errors: [], format: "csv" };
 }
 
+/**
+ * Convierte un valor a número aceptando tanto el formato español (1.299,95)
+ * como el inglés (1,299.95), que es lo que exporta Excel según el idioma.
+ *
+ * Reglas:
+ *  - Si aparecen coma y punto, el que está más a la derecha es el decimal.
+ *  - Si hay varios separadores iguales (1.234.567) son separadores de millares.
+ *  - Un único separador con exactamente 3 dígitos detrás y una parte entera
+ *    distinta de cero se lee como millar (1.299 -> 1299). Con cualquier otra
+ *    cantidad de decimales se lee como decimal (849,99 -> 849.99).
+ */
 function parseNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  const raw = String(value ?? "")
+
+  const cleaned = String(value ?? "")
     .replace(/\s/g, "")
-    .replace(",", ".")
-    .replace(/[^\d.-]/g, "");
-  if (!raw) return null;
-  const parsed = Number(raw);
+    .replace(/[^\d,.-]/g, "");
+  if (!cleaned) return null;
+
+  const negative = cleaned.startsWith("-");
+  const body = negative ? cleaned.slice(1) : cleaned;
+  const lastComma = body.lastIndexOf(",");
+  const lastDot = body.lastIndexOf(".");
+  const isThousandsPart = (part: string | undefined) =>
+    part !== undefined && part !== "" && part !== "0" && /^\d{1,3}$/.test(part);
+
+  let normalized: string;
+  if (lastComma !== -1 && lastDot !== -1) {
+    const decimal = lastComma > lastDot ? "," : ".";
+    const thousands = decimal === "," ? /\./g : /,/g;
+    normalized = body.replace(thousands, "").replace(decimal, ".");
+  } else if (lastComma !== -1 || lastDot !== -1) {
+    const separator = lastComma !== -1 ? "," : ".";
+    const parts = body.split(separator);
+    const looksLikeThousands =
+      parts.length > 2 ||
+      (parts.length === 2 && isThousandsPart(parts[0]) && parts[1]?.length === 3);
+    normalized = parts.join(looksLikeThousands ? "" : ".");
+  } else {
+    normalized = body;
+  }
+
+  const parsed = Number(negative ? `-${normalized}` : normalized);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -287,6 +377,10 @@ const productSchema = z.object({
   rating: z.number().min(0).max(5).nullable(),
   featured: z.boolean(),
   category_id: z.string().uuid().nullable(),
+  currency: z
+    .string()
+    .trim()
+    .regex(/^[A-Z]{3}$/, { message: "código de moneda de 3 letras (ej. EUR)" }),
 });
 
 const postSchema = z.object({
@@ -350,8 +444,10 @@ function prepare(
     const rows: PreparedProduct[] = [];
     records.forEach((record, index) => {
       const row = index + 1;
-      const label = String(record.name ?? record.slug ?? `Fila ${row}`);
-      const categoryKey = String(record.category ?? record.category_slug ?? record.categoria ?? "")
+      const label = String(record.name ?? record.nombre ?? record.slug ?? `Fila ${row}`);
+      const categoryKey = String(
+        record.category ?? record.category_slug ?? record.categoria ?? record.categoria_slug ?? "",
+      )
         .trim()
         .toLowerCase();
       const categoryId = categoryKey ? (categoryMap.get(categoryKey) ?? null) : null;
@@ -361,17 +457,46 @@ function prepare(
       }
 
       const parsed = productSchema.safeParse({
-        slug: String(record.slug ?? "").toLowerCase(),
-        name: String(record.name ?? ""),
-        amazon_url: String(record.amazon_url ?? record.url_amazon ?? record.enlace ?? ""),
+        slug: String(record.slug ?? record.url_amigable ?? "").toLowerCase(),
+        name: String(record.name ?? record.nombre ?? ""),
+        amazon_url: String(
+          record.amazon_url ??
+            record.url_amazon ??
+            record.url_de_producto_en_amazon ??
+            record.url_producto_en_amazon ??
+            record.enlace ??
+            record.enlace_amazon ??
+            "",
+        ),
         brand: String(record.brand ?? record.marca ?? ""),
-        short_description: String(record.short_description ?? record.descripcion_corta ?? ""),
-        description: String(record.description ?? record.descripcion ?? ""),
-        price: parseNumber(record.price ?? record.precio),
-        image_url: String(record.image_url ?? record.imagen ?? "").trim() || null,
+        short_description: String(
+          record.short_description ?? record.descripcion_corta ?? record.resumen ?? "",
+        ),
+        description: String(
+          record.description ??
+            record.descripcion ??
+            record.analisis_completo ??
+            record.analisis ??
+            record.descripcion_completa ??
+            "",
+        ),
+        price: parseNumber(record.price ?? record.precio ?? record.precio_eur),
+        image_url:
+          String(
+            record.image_url ??
+              record.url_de_imagen ??
+              record.url_imagen ??
+              record.imagen_url ??
+              record.imagen ??
+              "",
+          ).trim() || null,
         rating: parseNumber(record.rating ?? record.valoracion),
         featured: parseBoolean(record.featured ?? record.destacado),
         category_id: categoryId,
+        currency:
+          String(record.currency ?? record.moneda ?? "EUR")
+            .trim()
+            .toUpperCase() || "EUR",
       });
 
       if (!parsed.success) {
@@ -404,16 +529,18 @@ function prepare(
           short_description: parsed.data.short_description,
           description: parsed.data.description,
           price: parsed.data.price,
-          currency: "EUR",
+          currency: parsed.data.currency,
           image_url: parsed.data.image_url,
           amazon_url: parsed.data.amazon_url,
           rating: parsed.data.rating,
           featured: parsed.data.featured,
-          pros: parseList(record.pros),
-          cons: parseList(record.cons ?? record.contras),
+          pros: parseList(record.pros ?? record.ventajas),
+          cons: parseList(record.cons ?? record.contras ?? record.desventajas),
           updated_at: new Date().toISOString(),
         },
-        specs: parseSpecs(record.specs ?? record.ficha_tecnica ?? record.especificaciones),
+        specs: parseSpecs(
+          record.specs ?? record.ficha_tecnica ?? record.especificaciones ?? record.caracteristicas,
+        ),
       });
       preview.push({ row, label, errors: [], warnings: rowWarnings });
     });
@@ -700,7 +827,7 @@ export function AdminImport() {
             }}
             placeholder={
               target === "products"
-                ? "slug,name,amazon_url,price,...\nportatil-ejemplo,Portátil de Ejemplo,https://www.amazon.es/dp/B0EXAMPLE,899.99"
+                ? "Nombre,Slug,Categoría,Marca,Valoración,Precio (EUR),Moneda,URL de imagen,URL de producto en Amazon,Descripción corta,Análisis completo,Pros,Contras,Ficha técnica,Destacado\nPortátil de Ejemplo,portatil-ejemplo,portatiles,MarcaX,4.5,899.99,EUR,,https://www.amazon.es/dp/B0EXAMPLE,Resumen corto,,Ligero|Buena autonomía,Se calienta,"
                 : "Pega aquí el CSV o el JSON"
             }
             className="font-mono text-xs"
@@ -733,6 +860,28 @@ export function AdminImport() {
           </div>
         </div>
       </div>
+
+      <details className="mt-5 rounded-lg border border-border bg-muted/30 p-4">
+        <summary className="cursor-pointer text-sm font-medium">
+          Columnas que se reconocen para {activeTarget.label} ({COLUMN_DOCS[target].length})
+        </summary>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {COLUMN_DOCS[target].map((column) => (
+            <div key={column.name} className="text-xs">
+              <span className="font-mono font-medium">{column.name}</span>
+              {column.required ? <span className="ml-1 text-destructive">*</span> : null}
+              {column.note ? (
+                <span className="ml-1 text-muted-foreground">— {column.note}</span>
+              ) : null}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Las columnas con * son obligatorias. El orden no importa y los nombres se reconocen con o
+          sin acentos, en español o en inglés. Descarga la plantilla CSV para ver un ejemplo ya
+          relleno.
+        </p>
+      </details>
 
       {parsed.errors.length > 0 ? (
         <div className="mt-5 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
