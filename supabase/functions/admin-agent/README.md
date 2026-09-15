@@ -22,7 +22,7 @@ Necesitas [Supabase CLI](https://supabase.com/docs/guides/cli):
 ```powershell
 # Login y vínculo (solo la primera vez)
 supabase login
-supabase link --project-ref vnvdwlmrwnxklqefnilt
+supabase link --project-ref zszxncihhrdwjsuxcrhp
 
 # Secretos (solo la primera vez; nunca van al repo)
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY="tu_service_role"

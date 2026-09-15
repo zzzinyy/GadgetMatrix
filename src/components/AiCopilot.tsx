@@ -18,33 +18,46 @@ const SUGGESTIONS = [
 ];
 
 /**
- * Llama al copiloto. En local (npm run dev) usa la server function de
- * TanStack; en la web publicada (sin servidor) usa la Edge Function
- * Supabase "admin-agent". Devuelve { reply, actions } en ambos casos.
+ * Llama al copiloto. Prioridad:
+ * 1. Edge Function "admin-copilot" (desplegada y con GEMINI_API_KEY) — solo consejo.
+ * 2. Server function TanStack (npm run dev) — puede escribir en la BD.
+ * En local sin servidor, 1 falla y 2 responde; en Pages, 1 responde.
  */
 async function callCopilot(messages: AiMessage[]): Promise<{ reply: string; actions: string[] }> {
-  // 1. Intento local: server function (solo existe con `npm run dev`).
   try {
-    const local = await callLocalAgent(messages);
-    return local;
-  } catch (error) {
-    const raw = error instanceof Error ? error.message : "";
-    // Solo caemos a la Edge Function si el fallo es "no hay servidor".
-    if (!/invariant failed/i.test(raw)) throw error;
+    const { data, error } = await supabase.functions.invoke("admin-copilot", {
+      body: { messages },
+    });
+    if (error) throw error;
+    const reply =
+      typeof data?.message === "string"
+        ? data.message
+        : typeof data?.reply === "string"
+          ? data.reply
+          : null;
+    if (!reply) {
+      const detail =
+        typeof data?.error === "string" ? data.error : "Respuesta vacía del copiloto.";
+      throw new Error(detail);
+    }
+    const actions = Array.isArray(data?.actions) ? data.actions : [];
+    return { reply, actions };
+  } catch (edgeError) {
+    // Sin Edge (local sin deploy): caemos a la server function de TanStack.
+    try {
+      return await callLocalAgent(messages);
+    } catch (localError) {
+      const raw =
+        localError instanceof Error ? localError.message : "La IA no ha podido responder.";
+      if (/invariant failed/i.test(raw)) {
+        const edgeRaw = edgeError instanceof Error ? edgeError.message : "";
+        throw new Error(
+          edgeRaw || "El copiloto no responde: revisa la Edge Function 'admin-copilot'.",
+        );
+      }
+      throw localError instanceof Error ? localError : new Error(raw);
+    }
   }
-  // 2. Web publicada: Edge Function de Supabase.
-  const { data, error } = await supabase.functions.invoke("admin-agent", {
-    body: { messages },
-  });
-  if (error) throw new Error(error.message || "La Edge Function no ha respondido.");
-  if (!data || typeof data.reply !== "string") {
-    throw new Error(
-      typeof (data as { error?: string } | null)?.error === "string"
-        ? String((data as { error: string }).error)
-        : "Respuesta vacía de la Edge Function.",
-    );
-  }
-  return data as { reply: string; actions: string[] };
 }
 
 // useServerFn debe llamarse a nivel de componente: se crea una vez aquí.
@@ -143,11 +156,10 @@ export function AiCopilot() {
           </h2>
 
           <p className="text-sm text-muted-foreground">
-            Pídele que cree productos, fichas técnicas, artículos o
-            listas Top: los aplica en la base de datos.
+            Responde dudas y te ayuda a redactar productos, artículos o listas Top.
           </p>
           <p className="mt-1 text-xs text-muted-foreground/80">
-            Funciona en local y en la web publicada (Edge Function de Supabase).
+            Consejos en la web publicada; cambios en la base de datos solo en local.
           </p>
         </div>
       </div>
