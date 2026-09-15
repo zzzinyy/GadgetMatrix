@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AdminStats } from "@/components/AdminStats";
+import { AdminCategories } from "@/components/AdminCategories";
 import { AdminContent } from "@/components/AdminContent";
 import { AdminImport } from "@/components/AdminImport";
 import { AiCopilot } from "@/components/AiCopilot";
@@ -300,6 +301,8 @@ function AdminPage() {
       <AdminStats products={products ?? []} />
 
       <AiCopilot />
+
+      <AdminCategories />
 
       <AdminContent />
 
