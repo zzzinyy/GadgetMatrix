@@ -5,6 +5,7 @@ import { Bot, Loader2, Send, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 import {
   runAdminAgent,
   type AiMessage,
@@ -16,19 +17,67 @@ const SUGGESTIONS = [
   "Añade una categoría 'Teclados' y un teclado mecánico de ejemplo",
 ];
 
+/**
+ * Llama al copiloto. En local (npm run dev) usa la server function de
+ * TanStack; en la web publicada (sin servidor) usa la Edge Function
+ * Supabase "admin-agent". Devuelve { reply, actions } en ambos casos.
+ */
+async function callCopilot(messages: AiMessage[]): Promise<{ reply: string; actions: string[] }> {
+  // 1. Intento local: server function (solo existe con `npm run dev`).
+  try {
+    const local = await callLocalAgent(messages);
+    return local;
+  } catch (error) {
+    const raw = error instanceof Error ? error.message : "";
+    // Solo caemos a la Edge Function si el fallo es "no hay servidor".
+    if (!/invariant failed/i.test(raw)) throw error;
+  }
+  // 2. Web publicada: Edge Function de Supabase.
+  const { data, error } = await supabase.functions.invoke("admin-agent", {
+    body: { messages },
+  });
+  if (error) throw new Error(error.message || "La Edge Function no ha respondido.");
+  if (!data || typeof data.reply !== "string") {
+    throw new Error(
+      typeof (data as { error?: string } | null)?.error === "string"
+        ? String((data as { error: string }).error)
+        : "Respuesta vacía de la Edge Function.",
+    );
+  }
+  return data as { reply: string; actions: string[] };
+}
+
+// useServerFn debe llamarse a nivel de componente: se crea una vez aquí.
+function useLocalAgent() {
+  return useServerFn(runAdminAgent);
+}
+
+let localAgentRef: ((args: { data: { messages: AiMessage[] } }) => Promise<{
+  reply: string;
+  actions: string[];
+}>) | null = null;
+
+async function callLocalAgent(
+  messages: AiMessage[],
+): Promise<{ reply: string; actions: string[] }> {
+  if (!localAgentRef) throw new Error("Invariant failed: no server function in this build.");
+  return localAgentRef({ data: { messages } });
+}
+
 export function AiCopilot() {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState("");
   const queryClient = useQueryClient();
-  const callAgent = useServerFn(runAdminAgent);
+  // En local apunta a la server function real; en el build estático a un
+  // marcador que falla con "Invariant failed" y activa el fallback a la Edge.
+  try {
+    localAgentRef = useServerFn(runAdminAgent);
+  } catch {
+    localAgentRef = null;
+  }
 
   const mutation = useMutation({
-    mutationFn: (next: AiMessage[]) =>
-      callAgent({
-        data: {
-          messages: next,
-        },
-      }),
+    mutationFn: (next: AiMessage[]) => callCopilot(next),
 
     onSuccess: (result) => {
       setMessages((prev) => [
@@ -49,11 +98,11 @@ export function AiCopilot() {
     },
 
     onError: (error: Error) => {
-      console.error("[ai-copilot] runAdminAgent failed", error);
+      console.error("[ai-copilot] copilot failed", error);
       const raw = error?.message ?? "";
       toast.error(
-        raw.includes("Invariant failed")
-          ? "El copiloto necesita un servidor con funciones activas. En GitHub Pages (solo archivos estáticos) no funciona: úsalo en local con npm run dev o en un hosting con servidor (Lovable Cloud, Vercel, Netlify)."
+        raw.includes("Edge Function no desplegada") || raw.includes("Failed to send a request")
+          ? "La Edge Function 'admin-agent' aún no está desplegada en Supabase. Despliégala con: supabase functions deploy admin-agent (ver supabase/functions/admin-agent/README.md)."
           : raw || "La IA no ha podido responder. Revisa la consola (F12) para más detalle.",
         { duration: 8000 },
       );
@@ -98,8 +147,7 @@ export function AiCopilot() {
             listas Top: los aplica en la base de datos.
           </p>
           <p className="mt-1 text-xs text-muted-foreground/80">
-            Requiere servidor activo (en local con npm run dev). En GitHub Pages, que es solo
-            estático, no responde.
+            Funciona en local y en la web publicada (Edge Function de Supabase).
           </p>
         </div>
       </div>

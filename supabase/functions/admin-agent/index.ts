@@ -1,0 +1,85 @@
+// Edge Function: admin-agent — copiloto de IA para la web publicada.
+// Verifica JWT de Supabase, comprueba rol admin, y ejecuta el núcleo
+// compartido de src/lib/ai-admin.functions.ts con service_role.
+import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  inputSchema,
+  runAgentCore,
+  type AdminDb,
+} from "../../src/lib/ai-admin.functions.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY =
+      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const AI_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SERVICE_KEY || !AI_KEY) {
+      return Response.json(
+        { error: "Falta configuración del servidor (secretos de Supabase o IA)." },
+        { status: 500, headers: corsHeaders },
+      );
+    }
+
+    const authHeader = req.headers.get("authorization") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) {
+      return Response.json({ error: "No autorizado." }, { status: 401, headers: corsHeaders });
+    }
+
+    const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    const userId = claimsData?.claims?.sub;
+    if (claimsError || !userId) {
+      return Response.json({ error: "Sesión no válida." }, { status: 401, headers: corsHeaders });
+    }
+
+    const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: isAdmin, error: roleError } = await supabaseAdmin.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (roleError) {
+      return Response.json(
+        { error: "No se pudo verificar el rol de administrador." },
+        { status: 500, headers: corsHeaders },
+      );
+    }
+    if (!isAdmin) {
+      return Response.json(
+        { error: "Solo los administradores pueden usar el copiloto." },
+        { status: 403, headers: corsHeaders },
+      );
+    }
+
+    const body = (await req.json().catch(() => null)) as unknown;
+    const parsed = inputSchema.safeParse((body as { data?: unknown })?.data ?? body);
+    if (!parsed.success) {
+      return Response.json(
+        { error: "Petición no válida.", detail: parsed.error.issues.map((i) => i.message) },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
+    const result = await runAgentCore(
+      { supabaseAdmin: supabaseAdmin as unknown as AdminDb, apiKey: AI_KEY },
+      parsed.data.messages,
+    );
+    return Response.json(result, { headers: corsHeaders });
+  } catch (error) {
+    console.error("[admin-agent]", error);
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Error interno." },
+      { status: 500, headers: corsHeaders },
+    );
+  }
+});

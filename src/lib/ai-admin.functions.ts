@@ -2,18 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const messageSchema = z.object({
+export const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string().max(8000),
 });
 
-const inputSchema = z.object({
+export const inputSchema = z.object({
   messages: z.array(messageSchema).min(1).max(30),
 });
 
 export type AiMessage = z.infer<typeof messageSchema>;
 
-const SYSTEM_PROMPT = `Eres el copiloto de administración de GadgetMatrix, una web española de afiliados de Amazon sobre gadgets.
+export const SYSTEM_PROMPT = `Eres el copiloto de administración de GadgetMatrix, una web española de afiliados de Amazon sobre gadgets.
 Puedes trabajar directamente sobre la base de datos del sitio usando las herramientas disponibles: crear y editar productos con su ficha técnica, categorías, artículos del blog, listas "Top" y ajustes del sitio.
 Reglas:
 - Responde siempre en español, de forma breve y concreta.
@@ -24,7 +24,7 @@ Reglas:
 - Puedes actualizar precios (set_product_price), borrar contenidos (delete_content) y consultar las estadísticas de la web (get_analytics) si el usuario lo pide.
 - Cuando termines, resume en una lista lo que has hecho.`;
 
-const tools = [
+export const tools = [
   {
     type: "function",
     function: {
@@ -197,8 +197,20 @@ const tools = [
   },
 ] as const;
 
+export type ToolResult = { ok: boolean; detail: string; data?: unknown };
 
-type ToolResult = { ok: boolean; detail: string; data?: unknown };
+/** Tabla mínima: el subconjunto de supabase-js que usan las herramientas. */
+export type AdminTable = {
+  select: (cols: string) => PromiseLike<{ data: any[] | null; error: { message: string } | null }>;
+} & {
+  // Las variantes encadenadas se modelan por separado donde se usan.
+  [key: string]: any;
+};
+
+export type AdminDb = {
+  from: (table: string) => any;
+  rpc: (fn: string, args?: Record<string, unknown>) => PromiseLike<{ data: any; error: { message: string } | null }>;
+};
 
 export const runAdminAgent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -215,9 +227,38 @@ export const runAdminAgent = createServerFn({ method: "POST" })
     if (!apiKey) throw new Error("Falta la configuración de la IA.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const actions: string[] = [];
+    return runAgentWith(supabaseAdmin as unknown as AdminDb, apiKey, fetch, data.messages);
+  });
 
-    async function categoryIdFor(slug?: string): Promise<string | null> {
+/* ------------------------------------------------------------------ */
+/* Lógica compartida (sin imports de servidor): la Edge Function       */
+/* supabase/functions/admin-agent la importa desde aquí.               */
+/* ------------------------------------------------------------------ */
+
+type ChatMessage = Record<string, unknown>;
+
+export type AgentDeps = {
+  supabaseAdmin: AdminDb;
+  apiKey: string;
+  fetchImpl?: typeof fetch;
+};
+
+export async function runAgentCore(
+  deps: AgentDeps,
+  messages: AiMessage[],
+): Promise<{ reply: string; actions: string[] }> {
+  return runAgentWith(deps.supabaseAdmin, deps.apiKey, deps.fetchImpl ?? fetch, messages);
+}
+
+async function runAgentWith(
+  supabaseAdmin: AdminDb,
+  apiKey: string,
+  fetchImpl: typeof fetch,
+  messages: AiMessage[],
+): Promise<{ reply: string; actions: string[] }> {
+  const actions: string[] = [];
+
+  async function categoryIdFor(slug?: string): Promise<string | null> {
       if (!slug) return null;
       const { data: cat } = await supabaseAdmin
         .from("categories")
@@ -454,9 +495,11 @@ export const runAdminAgent = createServerFn({ method: "POST" })
               .gte("created_at", since),
             supabaseAdmin.from("products").select("id, name, slug"),
           ]);
-          const names = new Map((products ?? []).map((p) => [p.id, p.name]));
+          const names = new Map<string, string>(
+            ((products ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name]),
+          );
           const summary: Record<string, Record<string, number>> = {};
-          for (const event of events ?? []) {
+          for (const event of (events ?? []) as { product_id?: string | null; event_type: string }[]) {
             const key = names.get(event.product_id ?? "") ?? "otros";
             const bucket = (summary[key] ??= {});
             bucket[event.event_type] = (bucket[event.event_type] ?? 0) + 1;
@@ -469,15 +512,14 @@ export const runAdminAgent = createServerFn({ method: "POST" })
       }
     }
 
-    type ChatMessage = Record<string, unknown>;
     const conversation: ChatMessage[] = [
       { role: "system", content: SYSTEM_PROMPT },
-      ...data.messages.map((m) => ({ role: m.role, content: m.content })),
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
     ];
 
     let reply = "";
     for (let step = 0; step < 8; step++) {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const response = await fetchImpl("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -538,4 +580,4 @@ export const runAdminAgent = createServerFn({ method: "POST" })
     }
 
     return { reply: reply || "Listo.", actions };
-  });
+}
