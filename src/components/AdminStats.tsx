@@ -29,7 +29,14 @@ const COLORS = {
 
 export function AdminStats({ products }: { products: ProductWithSpecs[] }) {
   const [days, setDays] = useState<number>(30);
-  const { data: events, isLoading } = useQuery(eventsQuery(days));
+  const {
+    data: events,
+    isLoading,
+    isError,
+    error,
+    isFetching,
+    refetch,
+  } = useQuery(eventsQuery(days));
 
   const names = useMemo(
     () => new Map(products.map((product) => [product.id, product.name])),
@@ -75,7 +82,10 @@ export function AdminStats({ products }: { products: ProductWithSpecs[] }) {
             Visitas a fichas, clics en tarjetas del catálogo y clics hacia Amazon.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" disabled={isFetching} onClick={() => void refetch()}>
+            {isFetching ? "Actualizando…" : "Actualizar"}
+          </Button>
           {RANGES.map((range) => (
             <Button
               key={range}
@@ -89,7 +99,29 @@ export function AdminStats({ products }: { products: ProductWithSpecs[] }) {
         </div>
       </div>
 
-      {isLoading ? (
+      <p className="mt-3 text-xs text-muted-foreground">
+        Actualización automática cada 30 segundos. Días en UTC. Son interacciones, no visitantes
+        únicos ni ventas.
+      </p>
+      {isError ? (
+        <div role="alert" className="mt-6 rounded-lg border border-destructive p-4 text-sm">
+          <p>
+            No se pudieron cargar las estadísticas. No se mostrarán ceros como si no hubiera
+            actividad.
+          </p>
+          <p className="mt-2">
+            {error?.message || "Comprueba la conexión y los permisos de administrador en Supabase."}
+          </p>
+          <Button
+            className="mt-3"
+            variant="outline"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            Reintentar
+          </Button>
+        </div>
+      ) : isLoading ? (
         <p className="mt-6 text-sm text-muted-foreground">Cargando datos…</p>
       ) : (
         <>
@@ -107,8 +139,16 @@ export function AdminStats({ products }: { products: ProductWithSpecs[] }) {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={daily}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--muted-foreground)"
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--muted-foreground)"
+                    />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
                     <Line
@@ -148,7 +188,13 @@ export function AdminStats({ products }: { products: ProductWithSpecs[] }) {
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85}>
+                      <Pie
+                        data={pieData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={50}
+                        outerRadius={85}
+                      >
                         {pieData.map((entry) => (
                           <RechartsCell key={entry.name} fill={entry.color} />
                         ))}
@@ -173,8 +219,16 @@ export function AdminStats({ products }: { products: ProductWithSpecs[] }) {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={topProducts}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="short" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
+                    <XAxis
+                      dataKey="short"
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--muted-foreground)"
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--muted-foreground)"
+                    />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
                     <Bar dataKey="view" name="Visitas" fill={COLORS.view} radius={[4, 4, 0, 0]} />
