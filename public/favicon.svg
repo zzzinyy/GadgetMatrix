@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>GadgetMatrix</title>
+  <defs>
+    <linearGradient id="mark" x1="16" y1="14" x2="49" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#A3E635"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#10232E"/>
+  <path d="M 47 18 H 23 L 16 25 V 41 L 23 48 H 42 L 48 42 V 33 H 33"
+        fill="none" stroke="url(#mark)" stroke-width="8"
+        stroke-linecap="square" stroke-linejoin="round"/>
+</svg>
