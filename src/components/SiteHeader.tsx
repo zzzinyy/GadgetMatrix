@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Cpu } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { AccountMenu } from "@/components/AccountMenu";
 
 const links = [
   { to: "/", label: "Inicio" },
@@ -12,14 +12,11 @@ const links = [
   { to: "/blog", label: "Blog" },
 ] as const;
 
-
 export function SiteHeader() {
-  const { isAdmin } = useAuth();
-
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <Link to="/" className="flex shrink-0 items-center gap-2">
           <span className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
             <Cpu className="size-5" />
           </span>
@@ -28,7 +25,13 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1 text-sm">
+        <div className="order-2 shrink-0 xl:order-3">
+          <AccountMenu />
+        </div>
+        <nav
+          aria-label="Navegación principal"
+          className="order-3 flex w-full items-center gap-1 overflow-x-auto text-sm xl:order-2 xl:w-auto"
+        >
           {links.map((link) => (
             <Link
               key={link.to}
@@ -40,15 +43,6 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          {isAdmin ? (
-            <Link
-              to="/admin"
-              activeProps={{ className: "text-primary" }}
-              className="rounded-md px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Admin
-            </Link>
-          ) : null}
         </nav>
       </div>
     </header>

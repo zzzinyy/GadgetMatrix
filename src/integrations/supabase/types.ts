@@ -14,6 +14,18 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: { user_id: string; display_name: string; bio: string; avatar: string; created_at: string }
+        Insert: { user_id: string; display_name?: string; bio?: string; avatar?: string; created_at?: string }
+        Update: { display_name?: string; bio?: string; avatar?: string }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: { user_id: string; achievement_id: string; unlocked_at: string }
+        Insert: { user_id: string; achievement_id: string; unlocked_at?: string }
+        Update: { achievement_id?: string }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           content: string
@@ -439,6 +451,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      record_member_visit: { Args: never; Returns: boolean }
       claim_first_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {

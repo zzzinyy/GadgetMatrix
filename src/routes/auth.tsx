@@ -12,16 +12,15 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Acceso administrador | GadgetMatrix" },
+      { title: "Iniciar sesión | GadgetMatrix" },
       {
         name: "description",
-        content:
-          "Inicia sesión para gestionar los productos y fichas técnicas de GadgetMatrix.",
+        content: "Personaliza tu perfil y guarda tus logros en GadgetMatrix.",
       },
-      { property: "og:title", content: "Acceso administrador | GadgetMatrix" },
+      { property: "og:title", content: "Iniciar sesión | GadgetMatrix" },
       {
         property: "og:description",
-        content: "Panel de gestión del catálogo.",
+        content: "Tu cuenta de GadgetMatrix.",
       },
     ],
   }),
@@ -29,15 +28,8 @@ export const Route = createFileRoute("/auth")({
 });
 
 const schema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email({ message: "Introduce un email válido" })
-    .max(255),
-  password: z
-    .string()
-    .min(6, { message: "Mínimo 6 caracteres" })
-    .max(72),
+  email: z.string().trim().email({ message: "Introduce un email válido" }).max(255),
+  password: z.string().min(6, { message: "Mínimo 6 caracteres" }).max(72),
 });
 
 function AuthPage() {
@@ -50,7 +42,7 @@ function AuthPage() {
 
   useEffect(() => {
     if (session) {
-      navigate({ to: "/admin" });
+      navigate({ to: "/perfil" });
     }
   }, [session, navigate]);
 
@@ -60,9 +52,7 @@ function AuthPage() {
     const parsed = schema.safeParse({ email, password });
 
     if (!parsed.success) {
-      toast.error(
-        parsed.error.issues[0]?.message ?? "Datos inválidos"
-      );
+      toast.error(parsed.error.issues[0]?.message ?? "Datos inválidos");
       return;
     }
 
@@ -70,31 +60,33 @@ function AuthPage() {
 
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword(
-          parsed.data
-        );
+        const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
         if (error) throw error;
 
         toast.success("Sesión iniciada");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           ...parsed.data,
           options: {
-            emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}admin`,
+            emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}perfil`,
           },
         });
 
         if (error) throw error;
 
-        toast.success("Cuenta creada. Ya puedes iniciar sesión.");
+        toast.success(
+          data.session
+            ? "Cuenta creada. ¡Bienvenido a GadgetMatrix!"
+            : "Revisa tu correo para confirmar tu cuenta antes de iniciar sesión.",
+        );
       }
     } catch (err) {
       console.error("[auth] signIn/signUp failed", err);
       toast.error(
         err instanceof Error && err.message
           ? err.message
-          : "No se pudo completar la operación. Revisa la consola (F12) para más detalle."
+          : "No se pudo completar la operación. Revisa la consola (F12) para más detalle.",
       );
     } finally {
       setBusy(false);
@@ -104,13 +96,11 @@ function AuthPage() {
   return (
     <div className="mx-auto flex max-w-md flex-col px-4 py-20">
       <h1 className="font-display text-2xl font-bold">
-        {mode === "login"
-          ? "Acceso administrador"
-          : "Crear cuenta"}
+        {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
       </h1>
 
       <p className="mt-2 text-sm text-muted-foreground">
-        Gestiona productos, fichas técnicas y el tag de afiliado.
+        Personaliza tu perfil y consigue logros en GadgetMatrix.
       </p>
 
       <form
@@ -139,41 +129,23 @@ function AuthPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete={
-              mode === "login"
-                ? "current-password"
-                : "new-password"
-            }
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
             maxLength={72}
             disabled={busy}
           />
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={busy}
-        >
-          {mode === "login"
-            ? "Entrar"
-            : "Registrarme"}
+        <Button type="submit" className="w-full" disabled={busy}>
+          {mode === "login" ? "Entrar" : "Registrarme"}
         </Button>
 
         <button
           type="button"
-          onClick={() =>
-            setMode(
-              mode === "login"
-                ? "signup"
-                : "login"
-            )
-          }
+          onClick={() => setMode(mode === "login" ? "signup" : "login")}
           className="w-full text-sm text-muted-foreground hover:text-foreground"
           disabled={busy}
         >
-          {mode === "login"
-            ? "¿No tienes cuenta? Regístrate"
-            : "Ya tengo cuenta"}
+          {mode === "login" ? "¿No tienes cuenta? Regístrate" : "Ya tengo cuenta"}
         </button>
       </form>
     </div>

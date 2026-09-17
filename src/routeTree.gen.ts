@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ChollosRouteImport } from './routes/chollos'
 import { Route as ComparadorRouteImport } from './routes/comparador'
+import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
@@ -53,6 +54,11 @@ const ChollosRoute = ChollosRouteImport.update({
 const ComparadorRoute = ComparadorRouteImport.update({
   id: '/comparador',
   path: '/comparador',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductosRoute = ProductosRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRouteWithChildren
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
+  '/perfil': typeof PerfilRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
+  '/perfil': typeof PerfilRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/blog': typeof BlogRouteWithChildren
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
+  '/perfil': typeof PerfilRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/chollos'
     | '/comparador'
+    | '/perfil'
     | '/productos'
     | '/quiz'
     | '/sobre-nosotros'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chollos'
     | '/comparador'
+    | '/perfil'
     | '/productos'
     | '/quiz'
     | '/sobre-nosotros'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/chollos'
     | '/comparador'
+    | '/perfil'
     | '/productos'
     | '/quiz'
     | '/sobre-nosotros'
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren
   ChollosRoute: typeof ChollosRoute
   ComparadorRoute: typeof ComparadorRoute
+  PerfilRoute: typeof PerfilRoute
   ProductosRoute: typeof ProductosRoute
   QuizRoute: typeof QuizRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
@@ -259,6 +272,13 @@ declare module '@tanstack/react-router' {
       path: '/comparador'
       fullPath: '/comparador'
       preLoaderRoute: typeof ComparadorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/productos': {
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
   ChollosRoute: ChollosRoute,
   ComparadorRoute: ComparadorRoute,
+  PerfilRoute: PerfilRoute,
   ProductosRoute: ProductosRoute,
   QuizRoute: QuizRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
