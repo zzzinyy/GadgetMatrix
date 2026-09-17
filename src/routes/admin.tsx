@@ -20,7 +20,7 @@ import { AdminStats } from "@/components/AdminStats";
 import { AdminCategories } from "@/components/AdminCategories";
 import { AdminContent } from "@/components/AdminContent";
 import { AdminImport } from "@/components/AdminImport";
-import { AiCopilot } from "@/components/AiCopilot";
+import { CopilotChat } from "@/components/CopilotChat";
 import {
   affiliateTagQuery,
   categoriesQuery,
@@ -300,7 +300,7 @@ function AdminPage() {
 
       <AdminStats products={products ?? []} />
 
-      <AiCopilot />
+      <CopilotChat />
 
       <AdminCategories />
 

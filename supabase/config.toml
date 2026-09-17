@@ -1,1 +1,6 @@
 project_id = "zszxncihhrdwjsuxcrhp"
+
+# The handler validates the JWT with auth.getUser() and checks the admin role.
+# This supports Supabase's current signing keys without the legacy gateway check.
+[functions.admin-copilot]
+verify_jwt = false
