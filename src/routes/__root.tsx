@@ -145,7 +145,8 @@ function RootComponent() {
         </main>
         <SiteFooter />
       </div>
-      <Toaster position="top-center" />
+      {/* Abajo a la derecha: arriba taparía la cabecera fija y sus botones. */}
+      <Toaster position="bottom-right" />
     </QueryClientProvider>
   );
 }

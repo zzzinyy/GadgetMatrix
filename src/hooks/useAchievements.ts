@@ -28,6 +28,10 @@ export function useUnlockAchievement() {
       const achievement = achievementById.get(achievementId);
       toast.success(`Logro desbloqueado · ${achievement?.title ?? achievementId}`, {
         description: achievement?.description,
+        // Aviso discreto en la esquina inferior: no debe tapar la navegación.
+        icon: achievement?.emoji,
+        closeButton: true,
+        duration: 6_000,
       });
       await queryClient.invalidateQueries({ queryKey: ["member", userId] });
       return true;
