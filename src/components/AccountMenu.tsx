@@ -5,6 +5,7 @@ import { LogIn, LogOut, Trophy, UserRound, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { achievementProgress } from "@/lib/achievements";
 import { avatars, memberQuery } from "@/lib/member";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
@@ -54,6 +56,9 @@ export function AccountMenu() {
     );
   const profile = member.data?.profile;
   const avatar = avatars[profile?.avatar as keyof typeof avatars] ?? avatars.robot;
+  const progress = achievementProgress(
+    (member.data?.achievements ?? []).map((row) => row.achievement_id),
+  );
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -64,7 +69,14 @@ export function AccountMenu() {
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="flex items-center justify-between gap-3 text-xs font-normal text-muted-foreground">
+          <span>Rango {progress.rank.name}</span>
+          <span>
+            {progress.unlockedCount}/{progress.total} logros
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/perfil">
             <UserRound />

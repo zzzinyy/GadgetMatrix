@@ -8,6 +8,12 @@ export const profileSchema = z.object({
   bio: z.string().trim().max(240),
   avatar: z.enum(["robot", "rocket", "gamepad", "bolt"]),
 });
+/** Fábrica (como `profileSchema` en los tests) para inyectar `z` al probar. */
+export const achievementIdSchema = () =>
+  z
+    .string()
+    .trim()
+    .regex(/^[a-z_]{3,40}$/, "Identificador de logro inválido");
 
 export function memberQuery(userId: string | undefined) {
   return queryOptions({
@@ -39,4 +45,16 @@ export async function saveProfile(userId: string, input: unknown) {
     .single();
   if (error) throw error;
   return data;
+}
+
+/**
+ * Pide al servidor desbloquear un logro. Solo viaja el identificador: la base de
+ * datos comprueba el tipo de logro y si el miembro cumple el requisito, así que
+ * repetir la llamada devuelve `false` sin duplicar nada.
+ */
+export async function unlockAchievement(achievementId: string) {
+  const id = achievementIdSchema().parse(achievementId);
+  const { data, error } = await supabase.rpc("unlock_achievement", { p_achievement_id: id });
+  if (error) throw error;
+  return data === true;
 }

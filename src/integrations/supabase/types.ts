@@ -15,8 +15,24 @@ export type Database = {
   public: {
     Tables: {
       profiles: {
-        Row: { user_id: string; display_name: string; bio: string; avatar: string; created_at: string }
-        Insert: { user_id: string; display_name?: string; bio?: string; avatar?: string; created_at?: string }
+        Row: {
+          user_id: string
+          display_name: string
+          bio: string
+          avatar: string
+          created_at: string
+          days_visited: number
+          last_visit_on: string | null
+        }
+        Insert: {
+          user_id: string
+          display_name?: string
+          bio?: string
+          avatar?: string
+          created_at?: string
+          days_visited?: number
+          last_visit_on?: string | null
+        }
         Update: { display_name?: string; bio?: string; avatar?: string }
         Relationships: []
       }
@@ -24,6 +40,41 @@ export type Database = {
         Row: { user_id: string; achievement_id: string; unlocked_at: string }
         Insert: { user_id: string; achievement_id: string; unlocked_at?: string }
         Update: { achievement_id?: string }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievement_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      achievement_catalog: {
+        Row: {
+          id: string
+          emoji: string
+          title: string
+          description: string
+          kind: string
+          sort_order: number
+        }
+        Insert: {
+          id: string
+          emoji: string
+          title: string
+          description: string
+          kind: string
+          sort_order: number
+        }
+        Update: {
+          id?: string
+          emoji?: string
+          title?: string
+          description?: string
+          kind?: string
+          sort_order?: number
+        }
         Relationships: []
       }
       blog_posts: {
@@ -452,6 +503,7 @@ export type Database = {
     }
     Functions: {
       record_member_visit: { Args: never; Returns: boolean }
+      unlock_achievement: { Args: { p_achievement_id: string }; Returns: boolean }
       claim_first_admin: { Args: never; Returns: boolean }
       has_role: {
         Args: {

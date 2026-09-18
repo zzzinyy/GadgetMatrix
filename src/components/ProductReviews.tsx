@@ -5,6 +5,7 @@ import { Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnlockAchievement } from "@/hooks/useAchievements";
 import { reviewsQuery } from "@/lib/content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ function Stars({ value }: { value: number }) {
 export function ProductReviews({ productId }: { productId: string }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const unlock = useUnlockAchievement();
   const { data: reviews } = useQuery(reviewsQuery(productId));
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState("");
@@ -46,12 +48,14 @@ export function ProductReviews({ productId }: { productId: string }) {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setTitle("");
       setBody("");
       setRating(5);
       toast.success("¡Gracias por tu reseña!");
-      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      void queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      // El servidor comprueba que la reseña existe antes de darla por buena.
+      await unlock("first_review").catch(() => undefined);
     },
     onError: () => toast.error("No se pudo publicar la reseña."),
   });
@@ -86,7 +90,12 @@ export function ProductReviews({ productId }: { productId: string }) {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Tu valoración:</span>
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} estrellas`}>
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating(n)}
+                aria-label={`${n} estrellas`}
+              >
                 <Star
                   className={`size-5 text-accent ${n <= rating ? "fill-current" : "opacity-30"}`}
                 />
@@ -134,8 +143,7 @@ export function ProductReviews({ productId }: { productId: string }) {
                   <Stars value={review.rating} />
                   <p className="mt-2 font-medium">{review.title || "Sin título"}</p>
                   <p className="text-xs text-muted-foreground">
-                    {review.author_name} ·{" "}
-                    {new Date(review.created_at).toLocaleDateString("es-ES")}
+                    {review.author_name} · {new Date(review.created_at).toLocaleDateString("es-ES")}
                   </p>
                 </div>
                 {user?.id === review.user_id ? (
@@ -149,7 +157,9 @@ export function ProductReviews({ productId }: { productId: string }) {
                   </Button>
                 ) : null}
               </div>
-              <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{review.body}</p>
+              <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">
+                {review.body}
+              </p>
             </article>
           ))
         )}

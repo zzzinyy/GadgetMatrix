@@ -79,3 +79,22 @@ test("profile save validates and only writes editable fields", async () => {
   });
   assert.ok(calls.some((c) => c[0] === "eq" && c[2] === "one"));
 });
+
+test("achievement unlock only sends the identifier and trusts the server verdict", async () => {
+  const { module, calls } = await load([{ data: true }, { data: false }]);
+  await assert.rejects(module.unlockAchievement("Explorador de catálogo"));
+  await assert.rejects(module.unlockAchievement("x"));
+  assert.equal(calls.length, 0);
+  assert.equal(await module.unlockAchievement(" explore_catalog "), true);
+  assert.deepEqual(calls[0], [
+    "rpc",
+    "unlock_achievement",
+    { p_achievement_id: "explore_catalog" },
+  ]);
+  assert.equal(await module.unlockAchievement("explore_catalog"), false);
+});
+
+test("achievement unlock surfaces server errors", async () => {
+  const { module } = await load([{ error: new Error("Denied") }]);
+  await assert.rejects(module.unlockAchievement("first_visit"), /Denied/);
+});
