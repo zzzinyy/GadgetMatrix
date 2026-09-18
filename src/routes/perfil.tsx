@@ -80,24 +80,10 @@ function IdentityCard({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Progreso de logros</span>
-          <span>
-            {progress.unlockedCount} de {progress.total} · {progress.percent}%
-          </span>
-        </div>
-        <Progress
-          value={progress.percent}
-          aria-label={`Progreso de logros: ${progress.percent}%`}
-        />
-      </div>
-
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
         <Stat label="Miembro desde" value={formatDay(profile.created_at) ?? "—"} />
         <Stat label="Días por aquí" value={String(profile.days_visited)} />
         <Stat label="Última visita" value={formatDay(profile.last_visit_on) ?? "Hoy"} />
-        <Stat label="Siguiente logro" value={progress.next?.title ?? "¡Completo!"} />
       </dl>
     </section>
   );
@@ -107,9 +93,13 @@ function AchievementsSection({ achievements }: { achievements: AchievementRow[] 
   const unlockedAt = new Map(achievements.map((row) => [row.achievement_id, row.unlocked_at]));
   const progress = achievementProgress(unlockedAt.keys());
   return (
-    <section id="logros" className="space-y-4 scroll-mt-32">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-display text-2xl font-semibold">
+    <section
+      id="logros"
+      className="space-y-4 scroll-mt-32 rounded-xl border bg-card p-5"
+      aria-label="Mis logros"
+    >
+      <div className="space-y-1">
+        <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
           <Trophy className="text-primary" aria-hidden="true" />
           Mis logros
         </h2>
@@ -118,13 +108,13 @@ function AchievementsSection({ achievements }: { achievements: AchievementRow[] 
         </p>
       </div>
       <Progress value={progress.percent} aria-label={`Progreso de logros: ${progress.percent}%`} />
-      <p className="text-sm text-muted-foreground">
+      <p className="rounded-lg border bg-surface p-3 text-sm text-muted-foreground">
         {progress.next
           ? `Siguiente objetivo: ${progress.next.emoji} ${progress.next.title}. ${progress.next.hint}`
           : "¡Has desbloqueado todos los logros! Eres leyenda de GadgetMatrix."}
       </p>
 
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid gap-3">
         {achievementCatalog.map((achievement) => {
           const unlocked = unlockedAt.get(achievement.id);
           return (
@@ -132,16 +122,16 @@ function AchievementsSection({ achievements }: { achievements: AchievementRow[] 
               key={achievement.id}
               className={
                 unlocked
-                  ? "rounded-xl border border-primary/40 bg-primary/5 p-5"
-                  : "rounded-xl border bg-card p-5 opacity-70"
+                  ? "rounded-lg border border-primary/40 bg-primary/5 p-4"
+                  : "rounded-lg border bg-background p-4 opacity-70"
               }
             >
               <div className="flex items-start gap-3">
-                <span className="text-3xl" role="img" aria-label={achievement.title}>
+                <span className="text-2xl" role="img" aria-label={achievement.title}>
                   {achievement.emoji}
                 </span>
                 <div className="min-w-0 space-y-1">
-                  <p className="flex items-center gap-2 font-semibold">
+                  <p className="flex items-center gap-2 text-sm font-semibold">
                     {achievement.title}
                     {unlocked ? (
                       <Check className="size-4 text-primary" aria-label="Conseguido" />
@@ -149,7 +139,7 @@ function AchievementsSection({ achievements }: { achievements: AchievementRow[] 
                       <Lock className="size-4 text-muted-foreground" aria-label="Bloqueado" />
                     )}
                   </p>
-                  <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                  <p className="text-xs text-muted-foreground">{achievement.description}</p>
                   <p className="text-xs text-muted-foreground">
                     {unlocked
                       ? `Conseguido el ${formatDay(unlocked) ?? "—"}`
@@ -300,8 +290,8 @@ function ProfilePage() {
     );
   const { profile, achievements } = member.data;
   return (
-    <div className="mx-auto max-w-4xl space-y-10 px-4 py-10">
-      <header className="space-y-2">
+    <div className="mx-auto max-w-6xl px-4 py-10">
+      <header className="max-w-3xl space-y-2">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
           Área de miembro
         </p>
@@ -311,9 +301,19 @@ function ProfilePage() {
           Nadie más puede ver este panel.
         </p>
       </header>
-      <IdentityCard profile={profile} achievements={achievements} />
-      <AchievementsSection achievements={achievements} />
-      <ProfileForm key={user.id} profile={profile} />
+      {/* En móvil: resumen, logros y formulario. En pantallas grandes los logros
+          pasan a una columna lateral que acompaña al desplazamiento. */}
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+        <div className="lg:col-start-1 lg:row-start-1">
+          <IdentityCard profile={profile} achievements={achievements} />
+        </div>
+        <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <AchievementsSection achievements={achievements} />
+        </aside>
+        <div className="lg:col-start-1 lg:row-start-2">
+          <ProfileForm key={user.id} profile={profile} />
+        </div>
+      </div>
     </div>
   );
 }
