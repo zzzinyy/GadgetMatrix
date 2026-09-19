@@ -23,6 +23,7 @@ function endpoint({
   user = true,
   admin = true,
   model = { message: "Revisa la ficha", draft: product },
+  modelReply = null,
   rpcError = null,
 } = {}) {
   const calls = [];
@@ -66,11 +67,12 @@ function endpoint({
       },
     },
     createClient: () => client,
-    fetch: async () => {
+    fetch: async (url, init) => {
       calls.push("gemini");
-      return Response.json({
-        candidates: [{ content: { parts: [{ text: JSON.stringify(model) }] } }],
-      });
+      calls.push({ url, headers: init?.headers });
+      calls.push(JSON.parse(init?.body ?? "{}"));
+      if (modelReply) return modelReply();
+      return Response.json({ output_text: JSON.stringify(model) });
     },
   });
   return {
@@ -96,7 +98,49 @@ test("preparar devuelve una ficha sin ejecutar ninguna escritura", async () => {
   const body = await response.json();
   assert.equal(body.draft.name, product.name);
   assert.equal(body.draft.price, null);
-  assert.deepEqual(app.calls, ["user_roles", "categories", "gemini"]);
+  assert.equal(app.calls[0], "user_roles");
+  assert.equal(app.calls[1], "categories");
+  assert.equal(app.calls[2], "gemini");
+  // La Interactions API con gemini-3.6-flash: endpoint, cabecera, modelo e input.
+  const geminiCall = app.calls[3];
+  assert.equal(geminiCall.url, "https://generativelanguage.googleapis.com/v1beta/interactions");
+  assert.equal(geminiCall.headers["x-goog-api-key"], "test-value");
+  assert.equal(geminiCall.headers["Api-Revision"], "2026-05-20");
+  const geminiBody = app.calls[4];
+  assert.equal(geminiBody.model, "gemini-3.6-flash");
+  assert.match(geminiBody.system_instruction, /Eres el asistente de fichas/);
+  assert.deepEqual(geminiBody.input, [
+    { type: "user_input", content: [{ type: "text", text: "Crea el producto" }] },
+  ]);
+  assert.equal(geminiBody.response_format.mime_type, "application/json");
+  assert.ok(!JSON.stringify(geminiBody).includes("2.5-flash"));
+  assert.ok(!JSON.stringify(geminiBody).includes("generateContent"));
+});
+
+test("la respuesta de la Interactions API (steps) también se entiende", async () => {
+  // Gemini a veces no rellena output_text: el texto va en steps.model_output.
+  const app = endpoint({
+    modelReply: async () =>
+      Response.json({
+        steps: [
+          {
+            type: "model_output",
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ message: "Revisa la ficha", draft: product }),
+              },
+            ],
+          },
+        ],
+      }),
+  });
+  const response = await app.invoke({
+    action: "prepare",
+    messages: [{ role: "user", content: "Crea el producto" }],
+  });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).draft.name, product.name);
 });
 
 test("publicación confirmada usa RPC con campos validados, sin llamar a IA", async () => {
@@ -111,6 +155,7 @@ test("publicación confirmada usa RPC con campos validados, sin llamar a IA", as
   assert.equal((await response.json()).productId, requestId);
   assert.equal(app.calls[1].name, "publish_copilot_product");
   assert.equal(app.calls[1].args.p_draft.unexpected, undefined);
+  // Sin llamada a Gemini: solo user_roles y el objeto de la llamada RPC.
   assert.ok(!app.calls.includes("gemini"));
 });
 
@@ -157,7 +202,9 @@ test("salida de IA inválida se rechaza sin publicar", async () => {
     messages: [{ role: "user", content: "Publica directamente" }],
   });
   assert.equal(response.status, 502);
-  assert.ok(!app.calls.some((c) => typeof c === "object"));
+  // Se llamó a Gemini (registra url/cabeceras/cuerpo) pero nunca a la RPC.
+  assert.ok(app.calls.includes("gemini"));
+  assert.ok(app.calls.every((c) => typeof c === "string" || !("name" in c)));
 });
 
 test("duplicados o errores SQL no se presentan como éxito", async () => {
