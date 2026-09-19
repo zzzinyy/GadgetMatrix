@@ -25,6 +25,8 @@ function endpoint({
   model = { message: "Revisa la ficha", draft: product },
   modelReply = null,
   rpcError = null,
+  // Sustituto de las descargas externas (Amazon, imágenes). Null = simuladas.
+  external = null,
 } = {}) {
   const calls = [];
   let serve;
@@ -60,6 +62,13 @@ function endpoint({
     Request,
     Response,
     console,
+    // Globals de Deno que el scraper usa y el sandbox no hereda.
+    AbortController,
+    TextDecoder,
+    setTimeout,
+    clearTimeout,
+    // El scraper codifica la imagen con btoa (global de Deno).
+    btoa: (data) => Buffer.from(data, "binary").toString("base64"),
     Deno: {
       env: { get: () => "test-value" },
       serve: (fn) => {
@@ -68,8 +77,27 @@ function endpoint({
     },
     createClient: () => client,
     fetch: async (url, init) => {
+      const target = String(url);
+      if (!target.includes("generativelanguage.googleapis.com")) {
+        if (external) return external(target, init);
+        // CDN de imágenes de Amazon: sirve bytes de imagen, no HTML. Va antes
+        // que la comprobación de tienda porque su host contiene "amazon.com".
+        if (/media-amazon\.com|\/images\/I\//.test(target)) {
+          // Bytes reales de imagen: el scraper los guarda y los envía a Gemini
+          // inline para que el modelo vea el producto aunque la página esté
+          // bloqueada por el muro antibot.
+          return new Response(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]), {
+            status: 200,
+            headers: { "content-type": "image/jpeg" },
+          });
+        }
+        if (/amazon\.(es|com|de|fr|it|co\.uk)/.test(target)) {
+          return new Response(amazonHtml, { headers: { "content-type": "text/html" } });
+        }
+        return new Response(null, { status: 404 });
+      }
       calls.push("gemini");
-      calls.push({ url, headers: init?.headers });
+      calls.push({ url: target, headers: init?.headers });
       calls.push(JSON.parse(init?.body ?? "{}"));
       if (modelReply) return modelReply();
       return Response.json({ output_text: JSON.stringify(model) });
@@ -87,6 +115,100 @@ function endpoint({
       ),
   };
 }
+
+// Página de Amazon mínima pero real: título, marca, precio EUR, valoración,
+// bullets y tabla de especificaciones, como la del caso del usuario.
+const amazonHtml = `<!doctype html><html><body>
+<span id="productTitle">Samsung Galaxy Tab A11 11" 64 GB WiFi Gris</span>
+<div id="bylineInfo">Marca: Samsung</div>
+<span class="a-offscreen">249,00&nbsp;&euro;</span>
+<span class="a-icon-alt">4,5 de 5 estrellas</span>
+<span id="acrCustomerReviewText">1.234 valoraciones</span>
+<div id="feature-bullets"><ul>
+<li><span class="a-list-item">Pantalla de 11 pulgadas</span></li>
+<li><span class="a-list-item">Procesador octa-core</span></li>
+<li><span class="a-list-item">Batería de larga duración</span></li>
+</ul></div>
+<table class="a-keyvalue">
+<tr><td class="a-span3">Memoria RAM</td><td class="a-span9">8 GB</td></tr>
+<tr><td class="a-span3">Almacenamiento</td><td class="a-span9">64 GB</td></tr>
+</table>
+<div id="productDescription"><p>Tableta Android de Samsung.</p></div>
+<img src="https://m.media-amazon.com/images/I/51oHT85gdeL._AC_SL1080_.jpg">
+</body></html>`;
+
+test("URL de Amazon + imagen: la ficha se rellena con lo leído", async () => {
+  const app = endpoint({
+    model: {
+      message: "Ficha preparada",
+      draft: {
+        ...product,
+        name: "",
+        slug: "",
+        brand: "",
+        short_description: "",
+        description: "",
+        price: null,
+        rating: null,
+        image_url: "",
+        amazon_url: "",
+        pros: [],
+        cons: [],
+        specs: [],
+      },
+    },
+  });
+  const response = await app.invoke({
+    action: "prepare",
+    messages: [
+      {
+        role: "user",
+        content:
+          "https://www.amazon.es/Samsung-Pulgadas-Tableta-Android-Internacional/dp/B0FMFRFNWG/ref=pd_ci_mcx_mh_mcx_views_0_image?pd_rd_w=2CPGP https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T2/images/I/51oHT85gdeL._AC_SL1080_.jpg",
+      },
+    ],
+  });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  // El prompt debe llevar los datos verificados: el modelo redacta a partir
+  // de ellos y el servidor los impone en la ficha final.
+  const geminiBody = app.calls[app.calls.indexOf("gemini") + 2];
+  const sys = String(geminiBody?.system_instruction ?? "");
+  assert.ok(sys.includes("DATOS VERIFICADOS LEÍDOS DE LA PÁGINA DE AMAZON"));
+  assert.ok(sys.includes("Pantalla de 11 pulgadas"));
+  assert.equal(body.draft.name, 'Samsung Galaxy Tab A11 11" 64 GB WiFi Gris');
+  assert.equal(body.draft.slug, "samsung-galaxy-tab-a11-11-64-gb-wifi-gris");
+  assert.equal(body.draft.brand, "Samsung");
+  assert.equal(body.draft.price, 249);
+  assert.equal(body.draft.rating, 4.5);
+  assert.ok(body.draft.amazon_url.includes("amazon.es"), body.draft.amazon_url);
+  assert.equal(
+    body.draft.image_url,
+    "https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T2/images/I/51oHT85gdeL._AC_SL1080_.jpg",
+  );
+  assert.ok(body.draft.short_description.length > 0);
+  assert.deepEqual(body.draft.pros, [
+    "Pantalla de 11 pulgadas",
+    "Procesador octa-core",
+    "Batería de larga duración",
+  ]);
+  assert.equal(body.draft.specs.length, 2);
+  assert.equal(body.draft.specs[0].label, "Memoria RAM");
+  // El prompt llevaba los datos leídos para que redacte descripción/pros/cons.
+  assert.ok(geminiBody.system_instruction.includes("DATOS VERIFICADOS"));
+  // La imagen viaja inline: el modelo la ve aunque el scrape falle.
+  const userInput = geminiBody.input[0].content;
+  assert.equal(userInput[0].type, "text");
+  const imagePart = userInput.find((part) => part.type === "image");
+  assert.equal(imagePart?.mime_type, "image/jpeg");
+  assert.ok(imagePart?.data.length > 0);
+  assert.ok(
+    userInput.some((part) => part.type === "text" && /Imagen del producto/.test(part.text)),
+  );
+  // Herramientas activas: url_context (lee la página si el scrape falla) y
+  // google_search (contrasta specs y precios).
+  assert.deepEqual(geminiBody.tools, [{ type: "url_context" }, { type: "google_search" }]);
+});
 
 test("preparar devuelve una ficha sin ejecutar ninguna escritura", async () => {
   const app = endpoint();
