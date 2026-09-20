@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 import { validateProduct, validatePublishRequest } from "../_shared/product-draft.ts";
+import { corsHeaders, preflightResponse } from "../_shared/cors.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
@@ -354,36 +355,23 @@ interface RequestBody {
 }
 
 Deno.serve(async (req) => {
-  // CORS
+  const origin = req.headers.get("origin");
+  // CORS con lista blanca: los orígenes no permitidos reciben 403 en el
+  // preflight y respuestas sin `Access-Control-Allow-Origin` después.
   if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-      },
-    });
+    return preflightResponse(origin);
   }
 
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
+  const headers = corsHeaders(origin);
 
   try {
     if (req.method !== "POST")
-      return Response.json(
-        { error: "Método no permitido." },
-        { status: 405, headers: corsHeaders },
-      );
+      return Response.json({ error: "Método no permitido." }, { status: 405, headers });
     // Obtener usuario desde el JWT enviado por el navegador
     const authHeader = req.headers.get("Authorization");
 
     if (!authHeader) {
-      return Response.json(
-        { error: "No estás autenticado." },
-        { status: 401, headers: corsHeaders },
-      );
+      return Response.json({ error: "No estás autenticado." }, { status: 401, headers });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -404,7 +392,7 @@ Deno.serve(async (req) => {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return Response.json({ error: "Sesión no válida." }, { status: 401, headers: corsHeaders });
+      return Response.json({ error: "Sesión no válida." }, { status: 401, headers });
     }
 
     // Comprobar que es administrador
@@ -420,29 +408,26 @@ Deno.serve(async (req) => {
 
       return Response.json(
         { error: "No se pudo comprobar el permiso de administrador." },
-        { status: 500, headers: corsHeaders },
+        { status: 500, headers },
       );
     }
 
     if (!role) {
       return Response.json(
         { error: "No tienes permisos de administrador." },
-        { status: 403, headers: corsHeaders },
+        { status: 403, headers },
       );
     }
 
     const raw = await req.text();
     if (raw.length > 60000)
-      return Response.json(
-        { error: "Petición demasiado grande." },
-        { status: 413, headers: corsHeaders },
-      );
+      return Response.json({ error: "Petición demasiado grande." }, { status: 413, headers });
     let body: Record<string, unknown>;
     try {
       body = JSON.parse(raw);
       if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error();
     } catch {
-      return Response.json({ error: "JSON no válido." }, { status: 400, headers: corsHeaders });
+      return Response.json({ error: "JSON no válido." }, { status: 400, headers });
     }
 
     // This branch is never invoked by the model: only the explicit publish button.
@@ -451,10 +436,7 @@ Deno.serve(async (req) => {
       try {
         publication = validatePublishRequest(body);
       } catch (error) {
-        return Response.json(
-          { error: (error as Error).message },
-          { status: 400, headers: corsHeaders },
-        );
+        return Response.json({ error: (error as Error).message }, { status: 400, headers });
       }
       const { data, error } = await supabase.rpc("publish_copilot_product", {
         p_request_id: publication.requestId,
@@ -468,19 +450,16 @@ Deno.serve(async (req) => {
                 ? "Ya existe ese slug. No se ha sobrescrito ningún producto."
                 : "No se pudo publicar. Comprueba la migración publish_copilot_product y los permisos.",
           },
-          { status: 409, headers: corsHeaders },
+          { status: 409, headers },
         );
-      return Response.json(
-        { productId: data, message: "Producto publicado." },
-        { headers: corsHeaders },
-      );
+      return Response.json({ productId: data, message: "Producto publicado." }, { headers });
     }
     if (body.action !== "prepare")
-      return Response.json({ error: "Acción no válida." }, { status: 400, headers: corsHeaders });
+      return Response.json({ error: "Acción no válida." }, { status: 400, headers });
     if (!GEMINI_API_KEY)
       return Response.json(
         { error: "GEMINI_API_KEY no está configurada." },
-        { status: 500, headers: corsHeaders },
+        { status: 500, headers },
       );
 
     if (
@@ -495,10 +474,7 @@ Deno.serve(async (req) => {
           m.content.length > 10000,
       )
     ) {
-      return Response.json(
-        { error: "Formato de mensajes incorrecto." },
-        { status: 400, headers: corsHeaders },
-      );
+      return Response.json({ error: "Formato de mensajes incorrecto." }, { status: 400, headers });
     }
 
     // Limitar tamaño para evitar peticiones enormes
@@ -697,7 +673,7 @@ PROHIBIDO inventar precio, marca, specs o valoración: si no está en los datos 
         {
           error: interaction?.error?.message || "Gemini no pudo procesar la solicitud.",
         },
-        { status: 500, headers: corsHeaders },
+        { status: 500, headers },
       );
     }
 
@@ -781,11 +757,11 @@ PROHIBIDO inventar precio, marca, specs o valoración: si no está en los datos 
           error:
             "La IA devolvió una ficha no válida. Intenta aportar más datos. No se ha publicado nada.",
         },
-        { status: 502, headers: corsHeaders },
+        { status: 502, headers },
       );
     }
     return Response.json(result, {
-      headers: corsHeaders,
+      headers,
     });
   } catch (error) {
     console.error("admin-copilot error:", error);
@@ -796,7 +772,7 @@ PROHIBIDO inventar precio, marca, specs o valoración: si no está en los datos 
       },
       {
         status: 500,
-        headers: corsHeaders,
+        headers,
       },
     );
   }

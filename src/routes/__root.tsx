@@ -16,21 +16,42 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
 
+const notFoundLinks = [
+  { to: "/productos", label: "Catálogo de productos" },
+  { to: "/chollos", label: "Chollos del día" },
+  { to: "/comparador", label: "Comparador" },
+  { to: "/blog", label: "Blog" },
+] as const;
+
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
+      <div className="max-w-lg text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Error 404</p>
+        <h1 className="mt-2 font-display text-7xl font-bold text-foreground">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Esta página no existe</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          Puede que el enlace esté mal escrito, que el producto ya no esté en el catálogo o que la
+          página se haya movido. Te dejamos algunos atajos para seguir explorando.
         </p>
+        <ul className="mt-8 grid gap-2 sm:grid-cols-2">
+          {notFoundLinks.map((link) => (
+            <li key={link.to}>
+              <Link
+                to={link.to}
+                className="flex h-full items-center justify-center rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Volver al inicio
           </Link>
         </div>
       </div>
@@ -49,10 +70,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Esta página no ha cargado
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Ha fallado algo por nuestra parte. Vuelve a intentarlo o regresa al inicio.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -62,13 +83,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Reintentar
           </button>
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Volver al inicio
           </Link>
         </div>
       </div>

@@ -1,0 +1,5 @@
+Contact: https://github.com/zzzinyy/GadgetMatrix/security/advisories/new
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: es, en
+Canonical: https://zzzinyy.github.io/GadgetMatrix/.well-known/security.txt
+Policy: https://github.com/zzzinyy/GadgetMatrix/security/policy

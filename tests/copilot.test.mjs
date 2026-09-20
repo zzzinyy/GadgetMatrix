@@ -8,6 +8,10 @@ const shared = readFileSync(
   new URL("../supabase/functions/_shared/product-draft.ts", import.meta.url),
   "utf8",
 );
+const cors = readFileSync(
+  new URL("../supabase/functions/_shared/cors.ts", import.meta.url),
+  "utf8",
+);
 const handler = readFileSync(
   new URL("../supabase/functions/admin-copilot/index.ts", import.meta.url),
   "utf8",
@@ -51,7 +55,7 @@ function endpoint({
       return { data: requestId, error: rpcError };
     },
   };
-  const source = (shared + "\n" + handler)
+  const source = (shared + "\n" + cors + "\n" + handler)
     .replace(/^import .*;\r?\n/gm, "")
     .replace(/^export /gm, "");
   const code = ts.transpileModule(source, {
@@ -70,7 +74,12 @@ function endpoint({
     // El scraper codifica la imagen con btoa (global de Deno).
     btoa: (data) => Buffer.from(data, "binary").toString("base64"),
     Deno: {
-      env: { get: () => "test-value" },
+      env: {
+        get: (key) =>
+          key === "ALLOWED_ORIGINS"
+            ? "https://zzzinyy.github.io,http://localhost:5173"
+            : "test-value",
+      },
       serve: (fn) => {
         serve = fn;
       },
@@ -111,6 +120,13 @@ function endpoint({
           method: "POST",
           headers: authorized ? { Authorization: "Bearer test" } : {},
           body: JSON.stringify(body),
+        }),
+      ),
+    request: (method, origin) =>
+      serve(
+        new Request("https://local.test/admin-copilot", {
+          method,
+          ...(origin ? { headers: { Origin: origin } } : {}),
         }),
       ),
   };
@@ -208,6 +224,26 @@ test("URL de Amazon + imagen: la ficha se rellena con lo leído", async () => {
   // Herramientas activas: url_context (lee la página si el scrape falla) y
   // google_search (contrasta specs y precios).
   assert.deepEqual(geminiBody.tools, [{ type: "url_context" }, { type: "google_search" }]);
+});
+
+test("CORS: el preflight solo pasa con origen permitido", async () => {
+  const app = endpoint();
+  const allowed = await app.request("OPTIONS", "https://zzzinyy.github.io");
+  assert.equal(allowed.status, 204);
+  assert.equal(allowed.headers.get("Access-Control-Allow-Origin"), "https://zzzinyy.github.io");
+  const denied = await app.request("OPTIONS", "https://evil.test");
+  assert.equal(denied.status, 403);
+  assert.equal(denied.headers.get("Access-Control-Allow-Origin"), null);
+});
+
+test("CORS: nunca se emite comodín y las respuestas reflejan el origen", async () => {
+  const app = endpoint();
+  const response = await app.invoke({
+    action: "prepare",
+    messages: [{ role: "user", content: "Crea el producto" }],
+  });
+  assert.ok(!JSON.stringify(app.calls).includes('"*"'));
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), null);
 });
 
 test("preparar devuelve una ficha sin ejecutar ninguna escritura", async () => {

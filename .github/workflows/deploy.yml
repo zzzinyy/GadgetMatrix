@@ -47,6 +47,9 @@ jobs:
           find .output/public -name '*.js' -printf '%s %p\n' | sort -rn | head -30
           node scripts/fix-pages-entry.mjs
 
+      - name: Generate sitemap
+        run: node scripts/generate-sitemap.mjs
+
       - name: Create GitHub Pages fallback
         run: cp .output/public/index.html .output/public/404.html
 

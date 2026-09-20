@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Cpu } from "lucide-react";
 import { AccountMenu } from "@/components/AccountMenu";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 const links = [
   { to: "/", label: "Inicio" },
@@ -25,7 +26,8 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <div className="order-2 shrink-0 xl:order-3">
+        <div className="order-2 flex shrink-0 items-center gap-2 xl:order-3">
+          <GlobalSearch />
           <AccountMenu />
         </div>
         <nav
