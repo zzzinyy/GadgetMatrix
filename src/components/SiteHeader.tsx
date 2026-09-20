@@ -2,18 +2,21 @@ import { Link } from "@tanstack/react-router";
 import { Cpu } from "lucide-react";
 import { AccountMenu } from "@/components/AccountMenu";
 import { GlobalSearch } from "@/components/GlobalSearch";
-
-const links = [
-  { to: "/", label: "Inicio" },
-  { to: "/productos", label: "Productos" },
-  { to: "/comparador", label: "Comparador" },
-  { to: "/quiz", label: "Quiz" },
-  { to: "/top", label: "Top" },
-  { to: "/chollos", label: "Chollos" },
-  { to: "/blog", label: "Blog" },
-] as const;
+import { LocaleSwitcher, ThemeToggle } from "@/components/PreferencesButtons";
+import { useSettings } from "@/hooks/useSettings";
+import { t } from "@/lib/i18n";
 
 export function SiteHeader() {
+  const { locale } = useSettings();
+  const links = [
+    { to: "/", label: t("nav", "home", locale) },
+    { to: "/productos", label: t("nav", "products", locale) },
+    { to: "/comparador", label: t("nav", "comparator", locale) },
+    { to: "/quiz", label: t("nav", "quiz", locale) },
+    { to: "/top", label: t("nav", "tops", locale) },
+    { to: "/chollos", label: t("nav", "deals", locale) },
+    { to: "/blog", label: t("nav", "blog", locale) },
+  ] as const;
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -28,6 +31,8 @@ export function SiteHeader() {
 
         <div className="order-2 flex shrink-0 items-center gap-2 xl:order-3">
           <GlobalSearch />
+          <ThemeToggle />
+          <LocaleSwitcher />
           <AccountMenu />
         </div>
         <nav

@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { useAchievementTracker } from "@/hooks/useAchievements";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SettingsProvider } from "@/components/SettingsProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 const notFoundLinks = [
@@ -157,17 +158,19 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AchievementTracker />
-      <div className="flex min-h-screen flex-col">
-        <SiteHeader />
-        <main className="flex-1">
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </main>
-        <SiteFooter />
-      </div>
-      {/* Abajo a la derecha: arriba taparía la cabecera fija y sus botones. */}
-      <Toaster position="bottom-right" />
+      <SettingsProvider>
+        <AchievementTracker />
+        <div className="flex min-h-screen flex-col">
+          <SiteHeader />
+          <main className="flex-1">
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </main>
+          <SiteFooter />
+        </div>
+        {/* Abajo a la derecha: arriba taparía la cabecera fija y sus botones. */}
+        <Toaster position="bottom-right" />
+      </SettingsProvider>
     </QueryClientProvider>
   );
 }

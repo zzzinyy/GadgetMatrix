@@ -5,8 +5,10 @@ import { Check, ExternalLink, Star, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { affiliateTagQuery, affiliateUrl, formatPrice, productQuery } from "@/lib/catalog";
+import { browserStorage, pushHistory } from "@/lib/preferences";
 import { trackEvent } from "@/lib/analytics";
 import { PriceAlert, ShareButtons } from "@/components/ProductActions";
+import { FavoriteButton } from "@/components/PreferencesButtons";
 import { ProductReviews } from "@/components/ProductReviews";
 
 export const Route = createFileRoute("/producto/$slug")({
@@ -41,6 +43,9 @@ function ProductPage() {
     trackEvent(productId, "view");
   }, [productId]);
 
+  useEffect(() => {
+    if (slug) pushHistory(slug, browserStorage());
+  }, [slug]);
 
   if (isLoading) {
     return <p className="mx-auto max-w-6xl px-4 py-20 text-muted-foreground">Cargando ficha…</p>;
@@ -96,7 +101,10 @@ function ProductPage() {
             ) : null}
           </div>
 
-          <h1 className="mt-4 font-display text-3xl font-bold">{product.name}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-3xl font-bold">{product.name}</h1>
+            <FavoriteButton slug={product.slug} />
+          </div>
           <p className="mt-3 text-muted-foreground">{product.short_description}</p>
 
           <div className="mt-6 rounded-xl border border-border bg-card p-5 glow-card">
@@ -143,9 +151,7 @@ function ProductPage() {
                 </ul>
               </div>
               <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="font-display text-base font-semibold text-destructive">
-                  En contra
-                </h3>
+                <h3 className="font-display text-base font-semibold text-destructive">En contra</h3>
                 <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                   {product.cons.map((item) => (
                     <li key={item} className="flex gap-2">
@@ -187,6 +193,5 @@ function ProductPage() {
       <ShareButtons title={product.name} />
       <ProductReviews productId={product.id} />
     </article>
-
   );
 }
