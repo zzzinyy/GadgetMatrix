@@ -24,6 +24,8 @@ export function ProductCard({ product }: { product: ProductWithSpecs }) {
               src={product.image_url}
               alt={product.name}
               loading="lazy"
+              width={640}
+              height={480}
               className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : null}

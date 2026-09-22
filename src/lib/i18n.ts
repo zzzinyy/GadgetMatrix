@@ -62,6 +62,13 @@ const STRINGS = {
     lists: { es: "Tops", en: "Tops" },
     pages: { es: "Páginas", en: "Pages" },
   },
+  homeExtras: {
+    recent: { es: "Vistos recientemente", en: "Recently viewed" },
+    recentCta: { es: "Ver todos los productos", en: "View all products" },
+  },
+  headerExtras: {
+    favorites: { es: "Tus favoritos", en: "Your favorites" },
+  },
   favorites: {
     add: { es: "Guardar en favoritos", en: "Save to favorites" },
     remove: { es: "Quitar de favoritos", en: "Remove from favorites" },

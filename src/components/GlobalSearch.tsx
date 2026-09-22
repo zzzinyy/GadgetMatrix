@@ -170,6 +170,9 @@ export function GlobalSearch() {
               </CommandGroup>
             ))}
           </CommandList>
+          <span role="status" aria-live="polite" className="sr-only">
+            {term.trim() ? groups.reduce((n, g) => n + g.items.length, 0) : ""}
+          </span>
         </Command>
       </CommandDialog>
     </>

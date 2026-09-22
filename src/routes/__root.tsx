@@ -117,9 +117,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", media: "(prefers-color-scheme: dark)", content: "#0a0a12" },
+      { name: "theme-color", media: "(prefers-color-scheme: light)", content: "#fafafc" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: `${import.meta.env.BASE_URL}manifest.webmanifest` },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

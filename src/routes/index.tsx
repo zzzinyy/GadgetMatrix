@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { ShieldCheck, Sparkles, Tags } from "lucide-react";
 import heroImage from "@/assets/hero-gadgets.jpg";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { categoriesQuery, productsQuery } from "@/lib/catalog";
 import { useT } from "@/hooks/useT";
+import { browserStorage, getHistory } from "@/lib/preferences";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -95,6 +97,8 @@ function Index() {
         </section>
       ) : null}
 
+      <RecentlyViewed />
+
       <section className="mx-auto max-w-6xl px-4 py-14">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 className="font-display text-2xl font-bold">{tr("home", "latest")}</h2>
@@ -118,5 +122,37 @@ function Index() {
         </div>
       </section>
     </div>
+  );
+}
+
+/** Fila de productos vistos recientemente (localStorage), solo si hay historial. */
+function RecentlyViewed() {
+  const tr = useT();
+  const { data: products } = useQuery(productsQuery);
+  const [slugs, setSlugs] = useState<string[]>([]);
+  useEffect(() => {
+    setSlugs(getHistory(browserStorage()));
+  }, []);
+  if (slugs.length === 0) return null;
+  const bySlug = new Map((products ?? []).map((p) => [p.slug, p]));
+  const items = slugs
+    .map((slug) => bySlug.get(slug))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
+    .slice(0, 4);
+  if (items.length === 0) return null;
+  return (
+    <section className="mx-auto max-w-6xl px-4 pb-4">
+      <div className="flex items-end justify-between gap-3">
+        <h2 className="font-display text-2xl font-bold">{tr("homeExtras", "recent")}</h2>
+        <Link to="/productos" className="text-sm text-primary hover:underline">
+          {tr("homeExtras", "recentCta")}
+        </Link>
+      </div>
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {items.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    </section>
   );
 }

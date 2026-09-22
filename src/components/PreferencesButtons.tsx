@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Languages, Moon, Sun } from "lucide-react";
+import { Heart, Languages, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -59,6 +59,38 @@ export function LocaleSwitcher({ className }: { className?: string }) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** Acceso a favoritos con contador, visible en la cabecera. */
+export function FavoritesLink({ className }: { className?: string }) {
+  const { locale } = useSettings();
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    setCount(getFavorites(browserStorage()).length);
+    const onFocus = () => setCount(getFavorites(browserStorage()).length);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      aria-label={t("headerExtras", "favorites", locale)}
+      title={t("headerExtras", "favorites", locale)}
+      className={cn("relative gap-1.5", className)}
+      onClick={() => {
+        window.location.href = "/perfil#favoritos";
+      }}
+    >
+      <Heart className={cn("size-4", count > 0 && "fill-destructive text-destructive")} aria-hidden="true" />
+      {count > 0 ? (
+        <span className="absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          {count}
+        </span>
+      ) : null}
+    </Button>
   );
 }
 

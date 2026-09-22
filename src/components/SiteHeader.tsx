@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Cpu } from "lucide-react";
 import { AccountMenu } from "@/components/AccountMenu";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { LocaleSwitcher, ThemeToggle } from "@/components/PreferencesButtons";
+import { LocaleSwitcher, ThemeToggle, FavoritesLink } from "@/components/PreferencesButtons";
 import { useT } from "@/hooks/useT";
 
 export function SiteHeader() {
@@ -30,6 +30,7 @@ export function SiteHeader() {
 
         <div className="order-2 flex shrink-0 items-center gap-2 xl:order-3">
           <GlobalSearch />
+          <FavoritesLink />
           <ThemeToggle />
           <LocaleSwitcher />
           <AccountMenu />
