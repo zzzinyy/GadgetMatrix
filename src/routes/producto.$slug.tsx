@@ -1,3 +1,4 @@
+import { useT } from "@/hooks/useT";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/producto/$slug")({
 });
 
 function ProductPage() {
+  const tr = useT();
   const { slug } = Route.useParams();
   const { data: product, isLoading } = useQuery(productQuery(slug));
   const { data: tag } = useQuery(affiliateTagQuery);
@@ -140,7 +142,7 @@ function ProductPage() {
           {(product.pros.length > 0 || product.cons.length > 0) && (
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="font-display text-base font-semibold text-accent">A favor</h3>
+                <h3 className="font-display text-base font-semibold text-accent">{tr("product", "pros")}</h3>
                 <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                   {product.pros.map((item) => (
                     <li key={item} className="flex gap-2">
@@ -151,7 +153,7 @@ function ProductPage() {
                 </ul>
               </div>
               <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="font-display text-base font-semibold text-destructive">En contra</h3>
+                <h3 className="font-display text-base font-semibold text-destructive">{tr("product", "cons")}</h3>
                 <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                   {product.cons.map((item) => (
                     <li key={item} className="flex gap-2">
@@ -166,7 +168,7 @@ function ProductPage() {
         </section>
 
         <section>
-          <h2 className="font-display text-xl font-semibold">Ficha técnica</h2>
+          <h2 className="font-display text-xl font-semibold">{tr("product", "specs")}</h2>
           <dl className="mt-3 overflow-hidden rounded-xl border border-border">
             {specs.length === 0 ? (
               <p className="p-5 text-sm text-muted-foreground">
