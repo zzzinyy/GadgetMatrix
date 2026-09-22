@@ -5,6 +5,8 @@ import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { productsQuery, type ProductWithSpecs } from "@/lib/catalog";
+import { useT } from "@/hooks/useT";
+import type { Translator } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/quiz")({
@@ -30,38 +32,41 @@ export const Route = createFileRoute("/quiz")({
 
 type Step = { key: string; question: string; options: { value: string; label: string; hint?: string }[] };
 
-const STEPS: Step[] = [
-  {
-    key: "budget",
-    question: "¿Cuál es tu presupuesto?",
-    options: [
-      { value: "50", label: "Hasta 50 €" },
-      { value: "100", label: "50 – 100 €" },
-      { value: "250", label: "100 – 250 €" },
-      { value: "9999", label: "Sin límite" },
-    ],
-  },
-  {
-    key: "use",
-    question: "¿Para qué lo vas a usar?",
-    options: [
-      { value: "gaming", label: "Gaming" },
-      { value: "trabajo", label: "Teletrabajo y productividad" },
-      { value: "creacion", label: "Creación de contenido" },
-      { value: "movilidad", label: "Día a día y movilidad" },
-    ],
-  },
-  {
-    key: "os",
-    question: "¿Qué sistema operativo prefieres?",
-    options: [
-      { value: "windows", label: "Windows" },
-      { value: "mac", label: "macOS / iOS" },
-      { value: "android", label: "Android" },
-      { value: "indiferente", label: "Me da igual" },
-    ],
-  },
-];
+/** Preguntas del quiz. Los `value` son estables porque el scoring depende de ellos. */
+function buildSteps(tr: Translator): Step[] {
+  return [
+    {
+      key: "budget",
+      question: tr("quizSteps", "budgetQ"),
+      options: [
+        { value: "50", label: tr("quizSteps", "budget50") },
+        { value: "100", label: tr("quizSteps", "budget100") },
+        { value: "250", label: tr("quizSteps", "budget250") },
+        { value: "9999", label: tr("quizSteps", "budgetAny") },
+      ],
+    },
+    {
+      key: "use",
+      question: tr("quizSteps", "useQ"),
+      options: [
+        { value: "gaming", label: tr("quizSteps", "useGaming") },
+        { value: "trabajo", label: tr("quizSteps", "useWork") },
+        { value: "creacion", label: tr("quizSteps", "useContent") },
+        { value: "movilidad", label: tr("quizSteps", "useMobile") },
+      ],
+    },
+    {
+      key: "os",
+      question: tr("quizSteps", "osQ"),
+      options: [
+        { value: "windows", label: tr("quizSteps", "osWindows") },
+        { value: "mac", label: tr("quizSteps", "osMac") },
+        { value: "android", label: tr("quizSteps", "osAndroid") },
+        { value: "indiferente", label: tr("quizSteps", "osAny") },
+      ],
+    },
+  ];
+}
 
 const USE_KEYWORDS: Record<string, string[]> = {
   gaming: ["gaming", "gamer", "juego", "raton", "ratón", "auricular", "teclado", "lightspeed"],
@@ -109,11 +114,13 @@ function scoreProduct(product: ProductWithSpecs, answers: Record<string, string>
 }
 
 function QuizPage() {
+  const tr = useT();
+  const steps = buildSteps(tr);
   const { data: products } = useQuery(productsQuery);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const done = step >= STEPS.length;
+  const done = step >= steps.length;
   const results = done
     ? [...(products ?? [])]
         .map((p) => ({ p, score: scoreProduct(p, answers) }))
@@ -129,14 +136,11 @@ function QuizPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-14">
-      <h1 className="font-display text-3xl font-bold">¿Qué gadget necesitas?</h1>
-      <p className="mt-2 max-w-2xl text-muted-foreground">
-        Tres preguntas rápidas y te proponemos los productos de nuestro catálogo que mejor encajan
-        con tu presupuesto y tu forma de usarlos.
-      </p>
+      <h1 className="font-display text-3xl font-bold">{tr("quiz", "title")}</h1>
+      <p className="mt-2 max-w-2xl text-muted-foreground">{tr("quiz", "intro")}</p>
 
       <div className="mt-6 flex gap-2">
-        {STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <span
             key={s.key}
             className={cn(
@@ -150,15 +154,15 @@ function QuizPage() {
       {!done ? (
         <section className="mt-8 rounded-xl border border-border bg-card p-6">
           <p className="text-sm text-muted-foreground">
-            Pregunta {step + 1} de {STEPS.length}
+            {tr("quiz", "progress")} {step + 1} {tr("quiz", "of")} {steps.length}
           </p>
-          <h2 className="mt-1 font-display text-xl font-semibold">{STEPS[step]!.question}</h2>
+          <h2 className="mt-1 font-display text-xl font-semibold">{steps[step]!.question}</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {STEPS[step]!.options.map((option) => (
+            {steps[step]!.options.map((option) => (
               <button
                 key={option.value}
                 type="button"
-                onClick={() => choose(STEPS[step]!.key, option.value)}
+                onClick={() => choose(steps[step]!.key, option.value)}
                 className="rounded-lg border border-border bg-surface px-4 py-3 text-left text-sm transition-colors hover:border-primary hover:text-primary"
               >
                 {option.label}
@@ -167,14 +171,14 @@ function QuizPage() {
           </div>
           {step > 0 ? (
             <Button variant="ghost" size="sm" className="mt-4" onClick={() => setStep((s) => s - 1)}>
-              Volver
+              {tr("common", "back")}
             </Button>
           ) : null}
         </section>
       ) : (
         <section className="mt-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-xl font-semibold">Nuestra recomendación</h2>
+            <h2 className="font-display text-xl font-semibold">{tr("quiz", "result")}</h2>
             <Button
               variant="outline"
               size="sm"
@@ -183,13 +187,11 @@ function QuizPage() {
                 setStep(0);
               }}
             >
-              <RotateCcw className="size-4" /> Repetir quiz
+              <RotateCcw className="size-4" /> {tr("quiz", "restart")}
             </Button>
           </div>
           {results.length === 0 ? (
-            <p className="mt-6 text-muted-foreground">
-              Todavía no hay productos suficientes en el catálogo para recomendarte nada.
-            </p>
+            <p className="mt-6 text-muted-foreground">{tr("quiz", "empty")}</p>
           ) : (
             <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {results.map((product) => (

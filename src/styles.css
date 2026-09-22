@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
@@ -51,8 +51,67 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * Tema claro por defecto y tema oscuro con la clase `.dark` en <html>.
+ * `color-scheme` hace que los controles nativos (scrollbars, inputs, selects)
+ * acompañen al tema; sin él el modo claro mostraba controles oscuros.
+ */
 :root {
+  color-scheme: light;
   --radius: 0.75rem;
+  --background: oklch(0.99 0.004 224);
+  --foreground: oklch(0.21 0.02 232);
+  --surface: oklch(0.965 0.008 226);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 232);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 232);
+  --primary: oklch(0.52 0.11 205);
+  --primary-foreground: oklch(0.99 0.005 220);
+  --secondary: oklch(0.95 0.012 226);
+  --secondary-foreground: oklch(0.25 0.02 232);
+  --muted: oklch(0.95 0.012 226);
+  --muted-foreground: oklch(0.48 0.02 232);
+  --accent: oklch(0.6 0.15 132);
+  --accent-foreground: oklch(0.99 0.005 220);
+  --destructive: oklch(0.53 0.2 25);
+  --destructive-foreground: oklch(0.99 0.005 220);
+  --border: oklch(0.89 0.012 226);
+  --input: oklch(0.89 0.012 226);
+  --ring: oklch(0.52 0.11 205);
+  --amazon: oklch(0.64 0.15 68);
+  --amazon-foreground: oklch(0.99 0.005 220);
+  --chart-1: oklch(0.52 0.11 205);
+  --chart-2: oklch(0.6 0.15 132);
+  --chart-3: oklch(0.55 0.14 255);
+  --chart-4: oklch(0.64 0.15 68);
+  --chart-5: oklch(0.56 0.16 330);
+  --sidebar: oklch(0.97 0.008 226);
+  --sidebar-foreground: oklch(0.21 0.02 232);
+  --sidebar-primary: oklch(0.52 0.11 205);
+  --sidebar-primary-foreground: oklch(0.99 0.005 220);
+  --sidebar-accent: oklch(0.95 0.012 226);
+  --sidebar-accent-foreground: oklch(0.21 0.02 232);
+  --sidebar-border: oklch(0.89 0.012 226);
+  --sidebar-ring: oklch(0.52 0.11 205);
+
+  --gradient-hero: radial-gradient(
+      120% 90% at 15% 0%,
+      oklch(0.52 0.11 205 / 0.14) 0%,
+      transparent 60%
+    ),
+    radial-gradient(90% 80% at 95% 20%, oklch(0.6 0.15 132 / 0.12) 0%, transparent 55%);
+  --gradient-accent: linear-gradient(
+    100deg,
+    oklch(0.52 0.11 205) 0%,
+    oklch(0.6 0.15 132) 100%
+  );
+  --shadow-glow: 0 0 0 1px oklch(0.52 0.11 205 / 0.18), 0 24px 60px -24px oklch(0.52 0.11 205 / 0.3);
+  --shadow-card: 0 18px 40px -32px oklch(0.21 0.02 232 / 0.35);
+}
+
+.dark {
+  color-scheme: dark;
   --background: oklch(0.17 0.018 230);
   --foreground: oklch(0.96 0.008 220);
   --surface: oklch(0.22 0.022 232);

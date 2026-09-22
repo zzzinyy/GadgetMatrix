@@ -5,6 +5,7 @@ import heroImage from "@/assets/hero-gadgets.jpg";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { categoriesQuery, productsQuery } from "@/lib/catalog";
+import { useT } from "@/hooks/useT";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const tr = useT();
   const { data: products } = useQuery(productsQuery);
   const { data: categories } = useQuery(categoriesQuery);
   const featured = (products ?? []).filter((p) => p.featured).slice(0, 3);
@@ -38,28 +40,26 @@ function Index() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
               <Sparkles className="size-3.5 text-primary" />
-              Tecnología y gadgets
+              {tr("home", "badge")}
             </span>
             <h1 className="mt-6 font-display text-4xl font-bold leading-tight sm:text-5xl">
-              Elige bien tu próximo <span className="text-gradient">gadget</span>
+              {tr("home", "title")}{" "}
+              <span className="text-gradient">{tr("home", "titleHighlight")}</span>
             </h1>
-            <p className="mt-4 max-w-lg text-lg text-muted-foreground">
-              Analizamos auriculares, portátiles, smartwatches y accesorios. Fichas técnicas
-              completas, pros y contras, y el enlace directo para comprarlos en Amazon.
-            </p>
+            <p className="mt-4 max-w-lg text-lg text-muted-foreground">{tr("home", "intro")}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <Link to="/productos">Ver catálogo</Link>
+                <Link to="/productos">{tr("home", "ctaCatalog")}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/sobre-nosotros">Cómo analizamos</Link>
+                <Link to="/sobre-nosotros">{tr("home", "ctaHow")}</Link>
               </Button>
             </div>
           </div>
           <div className="overflow-hidden rounded-2xl border border-border glow-card">
             <img
               src={heroImage}
-              alt="Auriculares, portátil, smartwatch y teclado mecánico sobre fondo oscuro"
+              alt={tr("home", "heroAlt")}
               width={1600}
               height={1008}
               className="size-full object-cover"
@@ -71,21 +71,9 @@ function Index() {
       <section className="mx-auto max-w-6xl px-4 py-14">
         <div className="grid gap-4 sm:grid-cols-3">
           {[
-            {
-              icon: Tags,
-              title: "Precios claros",
-              text: "Precio de referencia y enlace de afiliado actualizado a Amazon.",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Fichas técnicas",
-              text: "Cada producto con sus especificaciones detalladas en base de datos.",
-            },
-            {
-              icon: Sparkles,
-              title: "Pros y contras",
-              text: "Lo bueno y lo mejorable, sin rodeos, antes de que compres.",
-            },
+            { icon: Tags, title: tr("home", "pricesTitle"), text: tr("home", "pricesText") },
+            { icon: ShieldCheck, title: tr("home", "specsTitle"), text: tr("home", "specsText") },
+            { icon: Sparkles, title: tr("home", "prosTitle"), text: tr("home", "prosText") },
           ].map((item) => (
             <div key={item.title} className="rounded-xl border border-border bg-card p-6 glow-card">
               <item.icon className="size-5 text-primary" />
@@ -98,7 +86,7 @@ function Index() {
 
       {featured.length > 0 ? (
         <section className="mx-auto max-w-6xl px-4 pb-4">
-          <h2 className="font-display text-2xl font-bold">Destacados</h2>
+          <h2 className="font-display text-2xl font-bold">{tr("home", "featured")}</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -109,7 +97,7 @@ function Index() {
 
       <section className="mx-auto max-w-6xl px-4 py-14">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="font-display text-2xl font-bold">Últimos análisis</h2>
+          <h2 className="font-display text-2xl font-bold">{tr("home", "latest")}</h2>
           <div className="flex flex-wrap gap-2">
             {(categories ?? []).map((cat) => (
               <Link

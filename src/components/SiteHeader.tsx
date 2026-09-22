@@ -3,19 +3,18 @@ import { Cpu } from "lucide-react";
 import { AccountMenu } from "@/components/AccountMenu";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { LocaleSwitcher, ThemeToggle } from "@/components/PreferencesButtons";
-import { useSettings } from "@/hooks/useSettings";
-import { t } from "@/lib/i18n";
+import { useT } from "@/hooks/useT";
 
 export function SiteHeader() {
-  const { locale } = useSettings();
+  const tr = useT();
   const links = [
-    { to: "/", label: t("nav", "home", locale) },
-    { to: "/productos", label: t("nav", "products", locale) },
-    { to: "/comparador", label: t("nav", "comparator", locale) },
-    { to: "/quiz", label: t("nav", "quiz", locale) },
-    { to: "/top", label: t("nav", "tops", locale) },
-    { to: "/chollos", label: t("nav", "deals", locale) },
-    { to: "/blog", label: t("nav", "blog", locale) },
+    { to: "/", label: tr("nav", "home") },
+    { to: "/productos", label: tr("nav", "products") },
+    { to: "/comparador", label: tr("nav", "comparator") },
+    { to: "/quiz", label: tr("nav", "quiz") },
+    { to: "/top", label: tr("nav", "tops") },
+    { to: "/chollos", label: tr("nav", "deals") },
+    { to: "/blog", label: tr("nav", "blog") },
   ] as const;
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
@@ -36,7 +35,7 @@ export function SiteHeader() {
           <AccountMenu />
         </div>
         <nav
-          aria-label="Navegación principal"
+          aria-label={tr("header", "navAria")}
           className="order-3 flex w-full items-center gap-1 overflow-x-auto text-sm xl:order-2 xl:w-auto"
         >
           {links.map((link) => (

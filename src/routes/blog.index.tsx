@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { blogPostsQuery } from "@/lib/content";
+import { useT } from "@/hooks/useT";
+import { intlLocale } from "@/lib/i18n";
+import { useSettings } from "@/hooks/useSettings";
 
 export const Route = createFileRoute("/blog/")({
   head: () => ({
@@ -21,20 +24,20 @@ export const Route = createFileRoute("/blog/")({
 });
 
 function BlogPage() {
+  const tr = useT();
+  const { locale } = useSettings();
   const { data: posts, isLoading } = useQuery(blogPostsQuery);
   const list = (posts ?? []).filter((post) => post.published);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
-      <h1 className="font-display text-3xl font-bold">Blog</h1>
-      <p className="mt-2 max-w-2xl text-muted-foreground">
-        Noticias, guías de compra y trucos para sacar partido a tus gadgets.
-      </p>
+      <h1 className="font-display text-3xl font-bold">{tr("blog", "title")}</h1>
+      <p className="mt-2 max-w-2xl text-muted-foreground">{tr("blog", "intro")}</p>
 
       {isLoading ? (
-        <p className="mt-10 text-muted-foreground">Cargando artículos…</p>
+        <p className="mt-10 text-muted-foreground">{tr("blog", "loading")}</p>
       ) : list.length === 0 ? (
-        <p className="mt-10 text-muted-foreground">Todavía no hay artículos publicados.</p>
+        <p className="mt-10 text-muted-foreground">{tr("blog", "empty")}</p>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((post) => (
@@ -62,7 +65,7 @@ function BlogPage() {
               </div>
               <div className="flex flex-1 flex-col gap-2 p-5">
                 <span className="text-xs font-medium uppercase tracking-widest text-primary">
-                  {new Date(post.published_at).toLocaleDateString("es-ES")}
+                  {new Date(post.published_at).toLocaleDateString(intlLocale(locale))}
                 </span>
                 <h2 className="font-display text-lg font-semibold leading-snug">{post.title}</h2>
                 <p className="line-clamp-3 text-sm text-muted-foreground">{post.excerpt}</p>

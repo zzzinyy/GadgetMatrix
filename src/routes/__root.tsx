@@ -11,30 +11,32 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { useT } from "@/hooks/useT";
+import { ThemeCssInitializer } from "@/components/ThemeCssInitializer";
 import { useAchievementTracker } from "@/hooks/useAchievements";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SettingsProvider } from "@/components/SettingsProvider";
 import { Toaster } from "@/components/ui/sonner";
 
-const notFoundLinks = [
-  { to: "/productos", label: "Catálogo de productos" },
-  { to: "/chollos", label: "Chollos del día" },
-  { to: "/comparador", label: "Comparador" },
-  { to: "/blog", label: "Blog" },
-] as const;
-
 function NotFoundComponent() {
+  const tr = useT();
+  const notFoundLinks = [
+    { to: "/productos", label: tr("notFound", "catalog") },
+    { to: "/chollos", label: tr("nav", "deals") },
+    { to: "/comparador", label: tr("nav", "comparator") },
+    { to: "/blog", label: tr("nav", "blog") },
+  ] as const;
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
       <div className="max-w-lg text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Error 404</p>
-        <h1 className="mt-2 font-display text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Esta página no existe</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Puede que el enlace esté mal escrito, que el producto ya no esté en el catálogo o que la
-          página se haya movido. Te dejamos algunos atajos para seguir explorando.
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          {tr("notFound", "code")}
         </p>
+        <h1 className="mt-2 font-display text-7xl font-bold text-foreground">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{tr("notFound", "title")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{tr("notFound", "text")}</p>
         <ul className="mt-8 grid gap-2 sm:grid-cols-2">
           {notFoundLinks.map((link) => (
             <li key={link.to}>
@@ -52,7 +54,7 @@ function NotFoundComponent() {
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Volver al inicio
+            {tr("notFound", "backHome")}
           </Link>
         </div>
       </div>
@@ -63,6 +65,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const tr = useT();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
@@ -71,11 +74,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Esta página no ha cargado
+          {tr("notFound", "errorTitle")}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Ha fallado algo por nuestra parte. Vuelve a intentarlo o regresa al inicio.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{tr("notFound", "errorText")}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -84,13 +85,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Reintentar
+            {tr("notFound", "retry")}
           </button>
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Volver al inicio
+            {tr("notFound", "backHome")}
           </Link>
         </div>
       </div>
@@ -141,8 +142,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
+        <ThemeCssInitializer />
         <HeadContent />
       </head>
       <body>

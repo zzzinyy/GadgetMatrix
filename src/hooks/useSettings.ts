@@ -18,3 +18,12 @@ export function useSettings(): Settings {
   if (!settings) throw new Error("useSettings debe usarse dentro de SettingsProvider");
   return settings;
 }
+
+/**
+ * Variante que no lanza. La necesitan los componentes que pueden renderizarse
+ * fuera de <SettingsProvider> (404, error boundary del root): ahí no hay
+ * preferencias guardadas y se asume el idioma por defecto.
+ */
+export function useOptionalSettings(): Settings | null {
+  return useContext(SettingsContext);
+}

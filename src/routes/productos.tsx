@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { categoriesQuery, productsQuery } from "@/lib/catalog";
+import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 
 type Search = { categoria?: string | undefined };
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/productos")({
 });
 
 function ProductsPage() {
+  const tr = useT();
   const { categoria } = Route.useSearch();
   const navigate = useNavigate({ from: "/productos" });
   const [term, setTerm] = useState("");
@@ -85,10 +87,10 @@ function ProductsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
-      <h1 className="font-display text-3xl font-bold">Catálogo</h1>
+      <h1 className="font-display text-3xl font-bold">{tr("products", "title")}</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        {filtered.length} producto{filtered.length === 1 ? "" : "s"} con ficha técnica completa y
-        enlace de compra en Amazon.
+        {filtered.length} {tr("common", filtered.length === 1 ? "product" : "products")}{" "}
+        {tr("products", "intro")}
       </p>
 
       <div className="mt-8 flex flex-wrap gap-2">
@@ -100,7 +102,7 @@ function ProductsPage() {
             !categoria ? "bg-primary text-primary-foreground" : "bg-surface text-muted-foreground",
           )}
         >
-          Todas
+          {tr("common", "all")}
         </button>
         {(categories ?? []).map((cat) => (
           <button
@@ -123,14 +125,14 @@ function ProductsPage() {
         <Input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
-          placeholder="Buscar producto o marca…"
+          placeholder={tr("products", "searchPlaceholder")}
         />
         <Select value={brand} onValueChange={setBrand}>
           <SelectTrigger>
-            <SelectValue placeholder="Marca" />
+            <SelectValue placeholder={tr("products", "brand")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas las marcas</SelectItem>
+            <SelectItem value="all">{tr("products", "allBrands")}</SelectItem>
             {brands.map((b) => (
               <SelectItem key={b} value={b}>
                 {b}
@@ -142,28 +144,28 @@ function ProductsPage() {
           value={maxPrice}
           onChange={(e) => setMaxPrice(e.target.value)}
           inputMode="numeric"
-          placeholder="Precio máx. (€)"
+          placeholder={tr("products", "maxPrice")}
         />
         <Select value={minRating} onValueChange={setMinRating}>
           <SelectTrigger>
-            <SelectValue placeholder="Valoración" />
+            <SelectValue placeholder={tr("products", "rating")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="0">Cualquier valoración</SelectItem>
-            <SelectItem value="3">3★ o más</SelectItem>
-            <SelectItem value="4">4★ o más</SelectItem>
-            <SelectItem value="4.5">4,5★ o más</SelectItem>
+            <SelectItem value="0">{tr("products", "anyRating")}</SelectItem>
+            <SelectItem value="3">{tr("products", "rating3")}</SelectItem>
+            <SelectItem value="4">{tr("products", "rating4")}</SelectItem>
+            <SelectItem value="4.5">{tr("products", "rating45")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={sort} onValueChange={setSort}>
           <SelectTrigger>
-            <SelectValue placeholder="Ordenar" />
+            <SelectValue placeholder={tr("products", "sort")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="recent">Más recientes</SelectItem>
-            <SelectItem value="price-asc">Precio: menor a mayor</SelectItem>
-            <SelectItem value="price-desc">Precio: mayor a menor</SelectItem>
-            <SelectItem value="rating">Mejor valorados</SelectItem>
+            <SelectItem value="recent">{tr("products", "sortRecent")}</SelectItem>
+            <SelectItem value="price-asc">{tr("products", "sortPriceAsc")}</SelectItem>
+            <SelectItem value="price-desc">{tr("products", "sortPriceDesc")}</SelectItem>
+            <SelectItem value="rating">{tr("products", "sortRating")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -173,13 +175,13 @@ function ProductsPage() {
         onClick={resetFilters}
         className="mt-3 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       >
-        Limpiar filtros
+        {tr("products", "clearFilters")}
       </button>
 
       {isLoading ? (
-        <p className="mt-10 text-muted-foreground">Cargando productos…</p>
+        <p className="mt-10 text-muted-foreground">{tr("products", "loading")}</p>
       ) : filtered.length === 0 ? (
-        <p className="mt-10 text-muted-foreground">No hay productos que coincidan con tu búsqueda.</p>
+        <p className="mt-10 text-muted-foreground">{tr("products", "empty")}</p>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((product) => (

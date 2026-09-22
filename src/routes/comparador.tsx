@@ -12,6 +12,7 @@ import {
   type ProductWithSpecs,
 } from "@/lib/catalog";
 import { trackEvent } from "@/lib/analytics";
+import { useT } from "@/hooks/useT";
 import { cn } from "@/lib/utils";
 
 const MAX = 3;
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/comparador")({
 });
 
 function ComparatorPage() {
+  const tr = useT();
   const { data: products, isLoading } = useQuery(productsQuery);
   const { data: tag } = useQuery(affiliateTagQuery);
   const [selected, setSelected] = useState<string[]>([]);
@@ -81,34 +83,33 @@ function ComparatorPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
-      <h1 className="font-display text-3xl font-bold">Comparador de gadgets</h1>
+      <h1 className="font-display text-3xl font-bold">{tr("comparator", "title")}</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        Selecciona hasta {MAX} productos y enfréntalos: precio, valoración, pros, contras y toda la
-        ficha técnica en una sola tabla.
+        {tr("comparator", "intro")}
       </p>
 
       <div className="mt-8 rounded-2xl border border-border bg-surface/60 p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-medium">
-            {selected.length}/{MAX} seleccionados
+            {selected.length}/{MAX} {tr("comparator", "selected")}
           </p>
           <div className="flex items-center gap-2">
             <Input
               value={term}
               onChange={(e) => setTerm(e.target.value)}
-              placeholder="Buscar producto…"
+              placeholder={tr("comparator", "searchPlaceholder")}
               className="sm:w-64"
             />
             {selected.length > 0 ? (
               <Button variant="ghost" size="sm" onClick={() => setSelected([])}>
-                Limpiar
+                {tr("comparator", "clear")}
               </Button>
             ) : null}
           </div>
         </div>
 
         {isLoading ? (
-          <p className="mt-4 text-sm text-muted-foreground">Cargando productos…</p>
+          <p className="mt-4 text-sm text-muted-foreground">{tr("products", "loading")}</p>
         ) : (
           <div className="mt-4 flex flex-wrap gap-2">
             {candidates.map((p) => {
@@ -134,7 +135,7 @@ function ComparatorPage() {
               );
             })}
             {candidates.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin resultados.</p>
+              <p className="text-sm text-muted-foreground">{tr("products", "empty")}</p>
             ) : null}
           </div>
         )}
@@ -142,7 +143,7 @@ function ComparatorPage() {
 
       {chosen.length < 2 ? (
         <p className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-          Elige al menos 2 productos para ver la comparativa.
+          {tr("comparator", "empty")}
         </p>
       ) : (
         <div className="mt-10 overflow-x-auto rounded-2xl border border-border">
@@ -150,7 +151,7 @@ function ComparatorPage() {
             <thead>
               <tr>
                 <th className="w-40 bg-surface/60 p-4 text-left align-bottom font-medium text-muted-foreground">
-                  Producto
+                  {tr("common", "product")}
                 </th>
                 {chosen.map((p) => (
                   <th key={p.id} className="border-l border-border p-4 text-left align-bottom">
@@ -165,7 +166,7 @@ function ComparatorPage() {
                           />
                         ) : null}
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                          {p.brand ?? p.categories?.name ?? "Gadget"}
+                          {p.brand ?? p.categories?.name ?? tr("products", "gadgetFallback")}
                         </p>
                         <Link
                           to="/producto/$slug"
@@ -177,7 +178,7 @@ function ComparatorPage() {
                       </div>
                       <button
                         type="button"
-                        aria-label={`Quitar ${p.name}`}
+                        aria-label={`${tr("comparator", "remove")} ${p.name}`}
                         onClick={() => toggle(p.id)}
                         className="rounded-md p-1 text-muted-foreground hover:text-foreground"
                       >
@@ -189,7 +190,7 @@ function ComparatorPage() {
               </tr>
             </thead>
             <tbody>
-              <Row label="Precio">
+              <Row label={tr("comparator", "price")}>
                 {chosen.map((p) => (
                   <Cell key={p.id}>
                     <span
@@ -202,14 +203,14 @@ function ComparatorPage() {
                     </span>
                     {bestPrice != null && p.price === bestPrice ? (
                       <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
-                        Más barato
+                        {tr("comparator", "bestPrice")}
                       </span>
                     ) : null}
                   </Cell>
                 ))}
               </Row>
 
-              <Row label="Valoración">
+              <Row label={tr("products", "rating")}>
                 {chosen.map((p) => (
                   <Cell key={p.id}>
                     {p.rating != null ? (
@@ -221,6 +222,11 @@ function ComparatorPage() {
                       >
                         <Star className="size-4 fill-current" />
                         {p.rating.toFixed(1)}
+                        {bestRating != null && p.rating === bestRating ? (
+                          <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
+                            {tr("comparator", "bestRating")}
+                          </span>
+                        ) : null}
                       </span>
                     ) : (
                       <Empty />
@@ -229,13 +235,13 @@ function ComparatorPage() {
                 ))}
               </Row>
 
-              <Row label="Categoría">
+              <Row label={tr("comparator", "category")}>
                 {chosen.map((p) => (
                   <Cell key={p.id}>{p.categories?.name ?? <Empty />}</Cell>
                 ))}
               </Row>
 
-              <Row label="Resumen">
+              <Row label={tr("comparator", "summary")}>
                 {chosen.map((p) => (
                   <Cell key={p.id}>
                     <span className="text-muted-foreground">{p.short_description}</span>
@@ -252,7 +258,7 @@ function ComparatorPage() {
                 </Row>
               ))}
 
-              <Row label="A favor">
+              <Row label={tr("comparator", "pros")}>
                 {chosen.map((p) => (
                   <Cell key={p.id}>
                     {p.pros?.length ? (
@@ -271,7 +277,7 @@ function ComparatorPage() {
                 ))}
               </Row>
 
-              <Row label="En contra">
+              <Row label={tr("comparator", "cons")}>
                 {chosen.map((p) => (
                   <Cell key={p.id}>
                     {p.cons?.length ? (

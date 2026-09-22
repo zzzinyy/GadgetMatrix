@@ -1,3 +1,4 @@
+import { useT } from "@/hooks/useT";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
@@ -33,6 +34,7 @@ const schema = z.object({
 });
 
 function AuthPage() {
+  const tr = useT();
   const navigate = useNavigate();
   const { session } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -122,7 +124,7 @@ function AuthPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Contraseña</Label>
+          <Label htmlFor="password">{tr("auth", "password")}</Label>
 
           <Input
             id="password"

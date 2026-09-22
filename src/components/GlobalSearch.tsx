@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/command";
 import { categoriesQuery, productsQuery } from "@/lib/catalog";
 import { blogPostsQuery, topListsQuery } from "@/lib/content";
+import { useT } from "@/hooks/useT";
 import {
   buildLookup,
   buildSearchIndex,
@@ -23,12 +24,12 @@ import {
   type SearchResult,
 } from "@/lib/search";
 
-const KIND_LABEL: Record<SearchKind, string> = {
-  product: "Productos",
-  post: "Blog",
-  list: "Tops",
-  page: "Páginas",
-};
+const KIND_LABEL_KEY = {
+  product: "products",
+  post: "posts",
+  list: "lists",
+  page: "pages",
+} as const satisfies Record<SearchKind, "products" | "posts" | "lists" | "pages">;
 
 const KIND_ICON: Record<SearchKind, typeof Search> = {
   product: ShoppingBag,
@@ -44,6 +45,7 @@ function categoryName(product: SearchResult, categories: Map<string, string>): s
 
 /** Buscador global (Ctrl/⌘+K): productos, artículos, tops y páginas. */
 export function GlobalSearch() {
+  const tr = useT();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
   const navigate = useNavigate();
@@ -104,31 +106,29 @@ export function GlobalSearch() {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        aria-label="Buscar en GadgetMatrix"
+        aria-label={tr("search", "buttonLabel")}
         className="gap-2 text-muted-foreground"
       >
         <Search className="size-4" aria-hidden="true" />
-        <span className="hidden md:inline">Buscar…</span>
+        <span className="hidden md:inline">{tr("search", "button")}</span>
         <kbd className="hidden rounded border border-border bg-surface px-1.5 text-[10px] font-medium lg:inline">
           Ctrl K
         </kbd>
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen} aria-label="Buscador global">
-        <Command shouldFilter={false} aria-label="Buscar productos, artículos y páginas">
+      <CommandDialog open={open} onOpenChange={setOpen} aria-label={tr("search", "dialogLabel")}>
+        <Command shouldFilter={false} aria-label={tr("search", "commandLabel")}>
           <CommandInput
-            placeholder="Busca productos, artículos, tops…"
+            placeholder={tr("search", "placeholder")}
             value={term}
             onValueChange={setTerm}
-            aria-label="Texto a buscar"
+            aria-label={tr("search", "inputLabel")}
           />
           <CommandList>
             <CommandEmpty>
-              {term.trim()
-                ? `Sin resultados para “${term.trim()}”. Prueba con otra palabra.`
-                : "Escribe para buscar en todo el sitio."}
+              {term.trim() ? tr("search", "noResultsFor").replace("{term}", term.trim()) : tr("search", "empty")}
             </CommandEmpty>
             {groups.map((group) => (
-              <CommandGroup key={group.kind} heading={KIND_LABEL[group.kind]}>
+              <CommandGroup key={group.kind} heading={tr("searchGroups", KIND_LABEL_KEY[group.kind])}>
                 {group.items.map((result) => {
                   const Icon = KIND_ICON[result.kind];
                   const key = result.href ?? `${result.kind}:${result.slug}`;

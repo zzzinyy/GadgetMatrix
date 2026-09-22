@@ -39,3 +39,12 @@ export function initialTheme(storage?: Pick<Storage, "getItem">, prefersLight?: 
   }
   return prefersLight ? "light" : "dark";
 }
+
+/**
+ * Script inline que se inyecta en <head> para aplicar el tema ANTES del primer
+ * pintado. Sin esto la página se pintaba con el tema por defecto y saltaba al
+ * guardado al montar React. Debe mantenerse sincronizado con `initialTheme`.
+ */
+export const THEME_INIT_SCRIPT = `(function(){try{var s=null;try{s=window.localStorage.getItem("${THEME_KEY}")}catch(e){}
+var t=(s==="light"||s==="dark")?s:((window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark");
+var r=document.documentElement;r.classList.toggle("dark",t==="dark");r.style.colorScheme=t;}catch(e){}})();`;

@@ -139,28 +139,40 @@ export type Deal = {
   previousPrice: number;
   currentPrice: number;
   discount: number;
+  /** Precio más bajo visto en el histórico consultado. */
+  lowestPrice: number;
+  /** Fecha del último dato de precio registrado, para saber si sigue vigente. */
+  lastCheckedAt: string | null;
 };
 
 /** Calcula bajadas de precio comparando el precio actual con el máximo histórico reciente. */
 export function buildDeals(products: ProductWithSpecs[], history: PricePoint[]): Deal[] {
-  const byProduct = new Map<string, number[]>();
+  const byProduct = new Map<string, PricePoint[]>();
   for (const point of history) {
     const list = byProduct.get(point.product_id) ?? [];
-    list.push(point.price);
+    list.push(point);
     byProduct.set(point.product_id, list);
   }
   const deals: Deal[] = [];
   for (const product of products) {
     const current = product.price;
     if (current == null) continue;
-    const prices = byProduct.get(product.id) ?? [];
+    const points = byProduct.get(product.id) ?? [];
+    const prices = points.map((point) => point.price);
     const max = Math.max(current, ...prices);
     if (max > current) {
+      // El histórico llega ordenado por fecha, pero no dependemos de ese orden.
+      const lastCheckedAt = points.reduce<string | null>(
+        (latest, point) => (latest && latest > point.recorded_at ? latest : point.recorded_at),
+        null,
+      );
       deals.push({
         product,
         previousPrice: max,
         currentPrice: current,
         discount: Math.round(((max - current) / max) * 100),
+        lowestPrice: Math.min(current, ...prices),
+        lastCheckedAt,
       });
     }
   }

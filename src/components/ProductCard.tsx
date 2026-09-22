@@ -2,13 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/PreferencesButtons";
-import { useSettings } from "@/hooks/useSettings";
+import { useT } from "@/hooks/useT";
 import { formatPrice, type ProductWithSpecs } from "@/lib/catalog";
 import { trackEvent } from "@/lib/analytics";
-import { t } from "@/lib/i18n";
 
 export function ProductCard({ product }: { product: ProductWithSpecs }) {
-  const { locale } = useSettings();
+  const tr = useT();
   return (
     <div className="glow-card hover:glow-card-hover group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card">
       <FavoriteButton slug={product.slug} className="absolute right-3 top-3 z-10" />
@@ -17,7 +16,7 @@ export function ProductCard({ product }: { product: ProductWithSpecs }) {
         params={{ slug: product.slug }}
         onClick={() => trackEvent(product.id, "card_click")}
         className="flex flex-1 flex-col overflow-hidden"
-        aria-label={`${product.name} — ${t("nav", "products", locale)}`}
+        aria-label={`${product.name} — ${tr("nav", "products")}`}
       >
         <div className="relative aspect-4/3 overflow-hidden bg-surface">
           {product.image_url ? (
@@ -30,14 +29,14 @@ export function ProductCard({ product }: { product: ProductWithSpecs }) {
           ) : null}
           {product.featured ? (
             <Badge className="absolute left-3 top-3 bg-accent text-accent-foreground">
-              Destacado
+              {tr("products", "featuredBadge")}
             </Badge>
           ) : null}
         </div>
         <div className="flex flex-1 flex-col gap-2 p-5">
           <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
             <span className="uppercase tracking-widest">
-              {product.categories?.name ?? "Gadget"}
+              {product.categories?.name ?? tr("products", "gadgetFallback")}
             </span>
             {product.rating ? (
               <span className="flex items-center gap-1 text-accent">
@@ -53,7 +52,7 @@ export function ProductCard({ product }: { product: ProductWithSpecs }) {
               {formatPrice(product.price, product.currency)}
             </span>
             <span className="text-sm text-muted-foreground transition-colors group-hover:text-foreground">
-              Ver ficha →
+              {tr("products", "cardCta")} →
             </span>
           </div>
         </div>
