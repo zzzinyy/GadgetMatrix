@@ -2,8 +2,24 @@
 // Verifica JWT de Supabase, comprueba rol admin, y ejecuta el núcleo
 // compartido de src/lib/ai-admin.functions.ts con service_role.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { inputSchema, runAgentCore, type AdminDb } from "../../src/lib/ai-admin.functions.ts";
+import { z } from "npm:zod";
+import { runAgentCore, type AdminDb } from "../_shared/admin-core.ts";
 import { corsHeaders, preflightResponse } from "../_shared/cors.ts";
+
+const inputSchema = z.object({
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(8000),
+      }),
+    )
+    .min(1)
+    .max(30),
+});
+
+const GROQ_KEY =
+  Deno.env.get("GROQ_API_KEY") ?? Deno.env.get("GROQ-API-KEY") ?? undefined;
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
@@ -17,7 +33,6 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const AI_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const GROQ_KEY = Deno.env.get("GROQ_API_KEY");
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SERVICE_KEY || !AI_KEY) {
       return Response.json(
         { error: "Falta configuración del servidor (secretos de Supabase o IA)." },
@@ -69,7 +84,7 @@ Deno.serve(async (req: Request) => {
       {
         supabaseAdmin: supabaseAdmin as unknown as AdminDb,
         apiKey: AI_KEY,
-        groqApiKey: GROQ_KEY ?? undefined,
+        groqApiKey: GROQ_KEY,
       },
       parsed.data.messages,
     );

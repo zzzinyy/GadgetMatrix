@@ -6,7 +6,8 @@ import { corsHeaders, preflightResponse } from "../_shared/cors.ts";
 import { callGroq, isQuotaError } from "../_shared/groq.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+const GROQ_API_KEY =
+  Deno.env.get("GROQ_API_KEY") ?? Deno.env.get("GROQ-API-KEY") ?? undefined;
 
 // --- Utilidades: URLs pegadas por el admin ---
 const MAX_FETCH_BYTES = 1_500_000;
