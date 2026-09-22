@@ -217,6 +217,8 @@ export type AgentDeps = {
   apiKey: string;
   /** Clave opcional de la reserva Groq (fallback si el gateway agota cuota). */
   groqApiKey?: string;
+  /** Modelo fijo de Groq (secreto GROQ-MODEL), opcional. */
+  groqModel?: string;
   fetchImpl?: typeof fetch;
 };
 
@@ -230,6 +232,7 @@ export async function runAgentCore(
     deps.fetchImpl ?? fetch,
     messages,
     deps.groqApiKey,
+    deps.groqModel,
   );
 }
 
@@ -239,6 +242,7 @@ async function runAgentWith(
   fetchImpl: typeof fetch,
   messages: AiMessage[],
   groqApiKey?: string,
+  groqModel?: string,
 ): Promise<{ reply: string; actions: string[] }> {
   const actions: string[] = [];
 
@@ -522,6 +526,7 @@ async function runAgentWith(
         const fallback = groqApiKey
           ? await callGroq({
               apiKey: groqApiKey,
+              fixedModel: groqModel,
               messages: conversation.filter(
                 (m): m is { role: "system" | "user" | "assistant"; content: string } =>
                   (m.role === "system" || m.role === "user" || m.role === "assistant") &&

@@ -8,6 +8,7 @@ import { callGroq, isQuotaError } from "../_shared/groq.ts";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GROQ_API_KEY =
   Deno.env.get("GROQ_API_KEY") ?? Deno.env.get("GROQ-API-KEY") ?? undefined;
+const GROQ_MODEL = Deno.env.get("GROQ-MODEL") ?? Deno.env.get("GROQ_MODEL") ?? undefined;
 
 // --- Utilidades: URLs pegadas por el admin ---
 const MAX_FETCH_BYTES = 1_500_000;
@@ -675,6 +676,7 @@ PROHIBIDO inventar precio, marca, specs o valoraci├│n: si no est├í en los
       if (isQuotaError(interaction?.error?.message, response.status)) {
         const fallback = await callGroq({
           apiKey: GROQ_API_KEY,
+          fixedModel: GROQ_MODEL,
           jsonMode: true,
           messages: [
             { role: "system", content: systemInstruction },

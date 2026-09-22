@@ -19,7 +19,10 @@ const inputSchema = z.object({
 });
 
 const GROQ_KEY =
-  Deno.env.get("GROQ_API_KEY") ?? Deno.env.get("GROQ-API-KEY") ?? undefined;
+  Deno.env.get("GROQ_API_KEY") ??
+  Deno.env.get("GROQ-API-KEY") ??
+  undefined;
+const GROQ_MODEL = Deno.env.get("GROQ-MODEL") ?? Deno.env.get("GROQ_MODEL") ?? undefined;
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin");
@@ -85,6 +88,7 @@ Deno.serve(async (req: Request) => {
         supabaseAdmin: supabaseAdmin as unknown as AdminDb,
         apiKey: AI_KEY,
         groqApiKey: GROQ_KEY,
+        groqModel: GROQ_MODEL,
       },
       parsed.data.messages,
     );
