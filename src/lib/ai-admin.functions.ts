@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { callGroq } from "../../supabase/functions/_shared/groq.ts";
 
 export const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -240,6 +241,8 @@ type ChatMessage = Record<string, unknown>;
 export type AgentDeps = {
   supabaseAdmin: AdminDb;
   apiKey: string;
+  /** Clave opcional de la reserva Groq (fallback si el gateway agota cuota). */
+  groqApiKey?: string;
   fetchImpl?: typeof fetch;
 };
 
@@ -247,7 +250,13 @@ export async function runAgentCore(
   deps: AgentDeps,
   messages: AiMessage[],
 ): Promise<{ reply: string; actions: string[] }> {
-  return runAgentWith(deps.supabaseAdmin, deps.apiKey, deps.fetchImpl ?? fetch, messages);
+  return runAgentWith(
+    deps.supabaseAdmin,
+    deps.apiKey,
+    deps.fetchImpl ?? fetch,
+    messages,
+    deps.groqApiKey,
+  );
 }
 
 async function runAgentWith(
@@ -255,6 +264,7 @@ async function runAgentWith(
   apiKey: string,
   fetchImpl: typeof fetch,
   messages: AiMessage[],
+  groqApiKey?: string,
 ): Promise<{ reply: string; actions: string[] }> {
   const actions: string[] = [];
 
@@ -531,6 +541,26 @@ async function runAgentWith(
           tools,
         }),
       });
+
+      // Cuota o créditos agotados en el gateway: intenta la reserva Groq
+      // (respuesta directa sin herramientas, mejor que fallar del todo).
+      if (response.status === 429 || response.status === 402) {
+        const fallback = groqApiKey
+          ? await callGroq({
+              apiKey: groqApiKey,
+              messages: conversation.filter(
+                (m): m is { role: "system" | "user" | "assistant"; content: string } =>
+                  (m.role === "system" || m.role === "user" || m.role === "assistant") &&
+                  typeof m.content === "string" &&
+                  m.content.trim().length > 0,
+              ),
+            })
+          : { ok: false as const, text: "" };
+        if (fallback.ok && fallback.text.trim()) {
+          actions.push("(Reserva Groq: respuesta sin herramientas)");
+          return { reply: fallback.text, actions };
+        }
+      }
 
       if (response.status === 429) throw new Error("Límite de peticiones alcanzado, inténtalo en un minuto.");
       if (response.status === 402) throw new Error("Se han agotado los créditos de IA del proyecto.");

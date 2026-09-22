@@ -17,6 +17,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const AI_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const GROQ_KEY = Deno.env.get("GROQ_API_KEY");
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SERVICE_KEY || !AI_KEY) {
       return Response.json(
         { error: "Falta configuración del servidor (secretos de Supabase o IA)." },
@@ -65,7 +66,11 @@ Deno.serve(async (req: Request) => {
     }
 
     const result = await runAgentCore(
-      { supabaseAdmin: supabaseAdmin as unknown as AdminDb, apiKey: AI_KEY },
+      {
+        supabaseAdmin: supabaseAdmin as unknown as AdminDb,
+        apiKey: AI_KEY,
+        groqApiKey: GROQ_KEY ?? undefined,
+      },
       parsed.data.messages,
     );
     return Response.json(result, { headers });
