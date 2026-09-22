@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
+import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -354,6 +355,93 @@ function downloadTemplate(target: TargetId) {
   URL.revokeObjectURL(url);
 }
 
+/** Lee la primera hoja de un .xlsx y la convierte en registros normalizados. */
+function parseWorkbookRecords(buffer: ArrayBuffer): RawRecord[] {
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) return [];
+  const sheet = workbook.Sheets[sheetName];
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: "" });
+  if (matrix.length === 0) return [];
+  const headers = (matrix[0] as unknown[]).map((cell) => normalizeKey(String(cell)));
+  const records: RawRecord[] = [];
+  for (const cells of matrix.slice(1)) {
+    const record: RawRecord = {};
+    headers.forEach((header, index) => {
+      if (header) record[header] = cells[index] ?? "";
+    });
+    if (Object.values(record).some((value) => String(value).trim() !== "")) records.push(record);
+  }
+  return records;
+}
+
+/** Descarga el catálogo actual como .xlsx listo para reimportar. */
+async function exportProductsToExcel(): Promise<void> {
+  const [productsResult, specsResult, categoriesResult] = await Promise.all([
+    supabase.from("products").select("*").order("name"),
+    supabase.from("product_specs").select("product_id, label, value, position").order("position"),
+    supabase.from("categories").select("id, name"),
+  ]);
+  if (productsResult.error) throw productsResult.error;
+  const specsByProduct = new Map<string, string[]>();
+  for (const spec of specsResult.data ?? []) {
+    const list = specsByProduct.get(spec.product_id) ?? [];
+    list.push(`${spec.label}:${spec.value}`);
+    specsByProduct.set(spec.product_id, list);
+  }
+  const categoryNames = new Map((categoriesResult.data ?? []).map((c) => [c.id, c.name]));
+  const headers = [
+    "Nombre",
+    "Slug",
+    "Categoría",
+    "Marca",
+    "Valoración",
+    "Precio (EUR)",
+    "Moneda",
+    "URL de imagen",
+    "URL de producto en Amazon",
+    "Descripción corta",
+    "Análisis completo",
+    "Pros",
+    "Contras",
+    "Ficha técnica",
+    "Destacado",
+  ];
+  const rows = (productsResult.data ?? []).map((product: Record<string, unknown>) => [
+    String(product.name ?? ""),
+    String(product.slug ?? ""),
+    categoryNames.get(String(product.category_id ?? "")) ?? "",
+    String(product.brand ?? ""),
+    (product.rating as number | null) ?? "",
+    (product.price as number | null) ?? "",
+    String(product.currency ?? "EUR"),
+    String(product.image_url ?? ""),
+    String(product.amazon_url ?? ""),
+    String(product.short_description ?? ""),
+    String(product.description ?? ""),
+    (product.pros as string[] | null)?.join("|") ?? "",
+    (product.cons as string[] | null)?.join("|") ?? "",
+    (specsByProduct.get(String(product.id ?? "")) ?? []).join("|"),
+    product.featured ? "si" : "no",
+  ]);
+  const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  sheet["!cols"] = headers.map((header, index) => ({
+    wch: index === 10 ? 60 : Math.max(12, header.length + 2),
+  }));
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, "Productos");
+  XLSX.writeFile(workbook, "catalogo-productos.xlsx");
+}
+
+/** Plantilla .xlsx generada desde el CSV de ejemplo de cada destino. */
+function downloadTemplateExcel(target: TargetId) {
+  const matrix = parseDelimited(TEMPLATES[target], ",");
+  const sheet = XLSX.utils.aoa_to_sheet(matrix);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, target);
+  XLSX.writeFile(workbook, `plantilla-${target}.xlsx`);
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Reglas de validación por destino                                           */
 /* -------------------------------------------------------------------------- */
@@ -643,6 +731,7 @@ export function AdminImport() {
   const { data: categories } = useQuery(categoriesQuery);
   const [target, setTarget] = useState<TargetId>("products");
   const [text, setText] = useState("");
+  const [fileRecords, setFileRecords] = useState<RawRecord[] | null>(null);
   const [fileName, setFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -655,7 +744,16 @@ export function AdminImport() {
     return map;
   }, [categories]);
 
-  const parsed = useMemo(() => parseInput(text), [text]);
+  const parsed = useMemo(() => {
+    if (fileRecords) {
+      return {
+        records: fileRecords.map((record) => normalizeRecord(record)),
+        errors: [],
+        format: "xlsx" as const,
+      };
+    }
+    return parseInput(text);
+  }, [fileRecords, text]);
   const prepared = useMemo(
     () => prepare(target, parsed.records, categoryMap),
     [target, parsed.records, categoryMap],
@@ -748,6 +846,7 @@ export function AdminImport() {
     onSuccess: (count) => {
       toast.success(`${count} fila(s) importadas correctamente`);
       setText("");
+      setFileRecords(null);
       setFileName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -766,15 +865,39 @@ export function AdminImport() {
       return;
     }
     setFileName(file.name);
+    if (/\.(xlsx|xls)$/i.test(file.name)) {
+      try {
+        const records = parseWorkbookRecords(await file.arrayBuffer());
+        if (records.length === 0) {
+          toast.error("La hoja está vacía o no tiene filas de datos bajo la cabecera.");
+          setFileRecords(null);
+          return;
+        }
+        setFileRecords(records);
+        setText("");
+      } catch (error) {
+        toast.error(`No se pudo leer el Excel: ${(error as Error).message}`);
+        setFileRecords(null);
+      }
+      return;
+    }
+    setFileRecords(null);
     setText(await file.text());
   }
 
   function switchTarget(next: TargetId) {
     setTarget(next);
     setText("");
+    setFileRecords(null);
     setFileName("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
+
+  const exportCatalog = useMutation({
+    mutationFn: exportProductsToExcel,
+    onSuccess: () => toast.success("Catálogo exportado como catalogo-productos.xlsx"),
+    onError: (error: Error) => toast.error(`No se pudo exportar: ${error.message}`),
+  });
 
   const activeTarget = TARGETS.find((item) => item.id === target) ?? TARGETS[0];
 
@@ -784,14 +907,27 @@ export function AdminImport() {
         <div>
           <h2 className="font-display text-lg font-semibold">Importación masiva</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Pega un CSV, TSV o JSON (o sube un archivo) para publicar muchos registros de golpe.
-            Funciona directamente contra la base de datos, así que también funciona en la web
-            publicada.
+            Pega un CSV, TSV o JSON, o sube un archivo .xlsx/.csv, para publicar muchos registros de
+            golpe. Descarga el catálogo en Excel, edítalo o amplíalo y vuelve a importarlo: las filas
+            con el mismo slug se actualizan.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => downloadTemplate(target)}>
-          Descargar plantilla CSV
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={exportCatalog.isPending}
+            onClick={() => exportCatalog.mutate()}
+          >
+            {exportCatalog.isPending ? "Exportando…" : "Exportar catálogo (Excel)"}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => downloadTemplateExcel(target)}>
+            Plantilla Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => downloadTemplate(target)}>
+            Plantilla CSV
+          </Button>
+        </div>
       </div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-[240px_1fr]">
@@ -823,6 +959,7 @@ export function AdminImport() {
             value={text}
             onChange={(event) => {
               setText(event.target.value);
+              setFileRecords(null);
               setFileName("");
             }}
             placeholder={
@@ -836,7 +973,7 @@ export function AdminImport() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.tsv,.txt,.json"
+              accept=".csv,.tsv,.txt,.json,.xlsx,.xls"
               onChange={handleFile}
               className="hidden"
             />
@@ -848,11 +985,12 @@ export function AdminImport() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  setText("");
-                  setFileName("");
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
+              onClick={() => {
+              setText("");
+              setFileRecords(null);
+              setFileName("");
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
               >
                 Limpiar
               </Button>
