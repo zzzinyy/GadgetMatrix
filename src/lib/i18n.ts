@@ -69,6 +69,27 @@ const STRINGS = {
   headerExtras: {
     favorites: { es: "Tus favoritos", en: "Your favorites" },
   },
+  botwall: {
+    title: {
+      es: "Escribe los caracteres que veas abajo",
+      en: "Type the characters you see below",
+    },
+    reason: {
+      es: "Hemos detectado actividad inusual desde tu navegador y necesitamos comprobar que no eres un robot. Es un paso rápido: introduce los caracteres de la imagen para continuar.",
+      en: "We've detected unusual activity from your browser and need to check that you're not a robot. It's quick: enter the characters from the image to continue.",
+    },
+    continue: { es: "Continuar a GadgetMatrix", en: "Continue to GadgetMatrix" },
+    placeholder: { es: "Escribe los caracteres", en: "Type the characters" },
+    imageAlt: {
+      es: "Imagen de verificación con seis caracteres distorsionados",
+      en: "Verification image with six distorted characters",
+    },
+    newCode: { es: "Generar otros caracteres", en: "Generate new characters" },
+    error: {
+      es: "Los caracteres no coinciden. Vuelve a intentarlo.",
+      en: "The characters don't match. Please try again.",
+    },
+  },
   favorites: {
     add: { es: "Guardar en favoritos", en: "Save to favorites" },
     remove: { es: "Quitar de favoritos", en: "Remove from favorites" },

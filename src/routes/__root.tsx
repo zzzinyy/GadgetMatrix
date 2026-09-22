@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -17,6 +17,8 @@ import { useAchievementTracker } from "@/hooks/useAchievements";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SettingsProvider } from "@/components/SettingsProvider";
+import { BotWall } from "@/components/BotWall";
+import { recordPageview, shouldChallenge, sessionStorageLike } from "@/lib/botwall";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -160,21 +162,41 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const [challenge, setChallenge] = useState(false);
+
+  // Heurística antibot: cuenta páginas vistas por sesión y, al superar el
+  // umbral de ráfaga, exige resolver el muro de caracteres antes de seguir.
+  useEffect(() => {
+    recordPageview(Date.now(), sessionStorageLike());
+    setChallenge(shouldChallenge(Date.now(), sessionStorageLike()));
+    const unsubscribe = router.subscribe("onResolved", () => {
+      recordPageview(Date.now(), sessionStorageLike());
+      setChallenge(shouldChallenge(Date.now(), sessionStorageLike()));
+    });
+    return unsubscribe;
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
-        <AchievementTracker />
-        <div className="flex min-h-screen flex-col">
-          <SiteHeader />
-          <main className="flex-1">
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-          </main>
-          <SiteFooter />
-        </div>
-        {/* Abajo a la derecha: arriba taparía la cabecera fija y sus botones. */}
-        <Toaster position="bottom-right" />
+        {challenge ? (
+          <BotWall onPass={() => setChallenge(false)} />
+        ) : (
+          <>
+            <AchievementTracker />
+            <div className="flex min-h-screen flex-col">
+              <SiteHeader />
+              <main className="flex-1">
+                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                <Outlet />
+              </main>
+              <SiteFooter />
+            </div>
+            {/* Abajo a la derecha: arriba taparía la cabecera fija y sus botones. */}
+            <Toaster position="bottom-right" />
+          </>
+        )}
       </SettingsProvider>
     </QueryClientProvider>
   );
