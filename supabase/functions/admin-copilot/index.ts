@@ -723,12 +723,32 @@ PROHIBIDO inventar precio, marca, specs o valoraci├│n: si no est├í en los
         try {
           const decoded = JSON.parse(extractJsonText(fallback.text));
           if (typeof decoded.message !== "string" || decoded.message.length > 10000)
-            throw new Error();
-          const draft = decoded.draft ? validateProduct(decoded.draft) : null;
+            throw new Error("mensaje ausente o demasiado largo");
+          let draft: ReturnType<typeof validateProduct> | null = null;
+          if (decoded.draft) {
+            try {
+              draft = validateProduct(decoded.draft);
+            } catch (validationError) {
+              return Response.json(
+                {
+                  error:
+                    `La reserva de IA devolvió una ficha que no pasa la validación: ` +
+                    `${(validationError as Error).message}. No se ha publicado nada.`,
+                  debug: JSON.stringify(decoded.draft).slice(0, 1200),
+                },
+                { status: 502, headers },
+              );
+            }
+          }
           return Response.json({ message: decoded.message, draft }, { headers });
-        } catch {
+        } catch (parseError) {
           return Response.json(
-            { error: "La reserva de IA devolvio una ficha no valida. No se ha publicado nada." },
+            {
+              error:
+                `La reserva de IA devolvió una respuesta que no se pudo leer como JSON ` +
+                `(${(parseError as Error).message}). No se ha publicado nada.`,
+              debug: fallback.text.slice(0, 1200),
+            },
             { status: 502, headers },
           );
         }
