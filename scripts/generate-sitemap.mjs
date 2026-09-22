@@ -12,7 +12,7 @@ export const SITE_ORIGIN = "https://zzzinyy.github.io";
 /** Prefijo de GitHub Pages donde vive la app. */
 export const BASE_PATH = "/GadgetMatrix/";
 /** Rutas privadas o de servicio que nunca deben aparecer en el sitemap. */
-export const EXCLUDED_ROUTES = ["/admin", "/auth", "/perfil", "/404"];
+export const EXCLUDED_ROUTES = ["/panel-gm7k3", "/auth", "/perfil", "/404", "/admin"];
 
 /** Convierte `GadgetMatrix`, `/GadgetMatrix` o `GadgetMatrix/` en `/GadgetMatrix/`. */
 export function normalizeBase(base) {

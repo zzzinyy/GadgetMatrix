@@ -10,11 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ChollosRouteImport } from './routes/chollos'
 import { Route as ComparadorRouteImport } from './routes/comparador'
+import { Route as PanelGm7k3RouteImport } from './routes/panel-gm7k3'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as QuizRouteImport } from './routes/quiz'
@@ -29,11 +29,6 @@ import { Route as TopSlugRouteImport } from './routes/top.$slug'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -54,6 +49,11 @@ const ChollosRoute = ChollosRouteImport.update({
 const ComparadorRoute = ComparadorRouteImport.update({
   id: '/comparador',
   path: '/comparador',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelGm7k3Route = PanelGm7k3RouteImport.update({
+  id: '/panel-gm7k3',
+  path: '/panel-gm7k3',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PerfilRoute = PerfilRouteImport.update({
@@ -109,11 +109,11 @@ const TopSlugRoute = TopSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
+  '/panel-gm7k3': typeof PanelGm7k3Route
   '/perfil': typeof PerfilRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
@@ -127,10 +127,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
+  '/panel-gm7k3': typeof PanelGm7k3Route
   '/perfil': typeof PerfilRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
@@ -144,11 +144,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/blog': typeof BlogRouteWithChildren
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
+  '/panel-gm7k3': typeof PanelGm7k3Route
   '/perfil': typeof PerfilRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
@@ -164,11 +164,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/auth'
     | '/blog'
     | '/chollos'
     | '/comparador'
+    | '/panel-gm7k3'
     | '/perfil'
     | '/productos'
     | '/quiz'
@@ -182,10 +182,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/auth'
     | '/chollos'
     | '/comparador'
+    | '/panel-gm7k3'
     | '/perfil'
     | '/productos'
     | '/quiz'
@@ -198,11 +198,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/admin'
     | '/auth'
     | '/blog'
     | '/chollos'
     | '/comparador'
+    | '/panel-gm7k3'
     | '/perfil'
     | '/productos'
     | '/quiz'
@@ -217,11 +217,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   BlogRoute: typeof BlogRouteWithChildren
   ChollosRoute: typeof ChollosRoute
   ComparadorRoute: typeof ComparadorRoute
+  PanelGm7k3Route: typeof PanelGm7k3Route
   PerfilRoute: typeof PerfilRoute
   ProductosRoute: typeof ProductosRoute
   QuizRoute: typeof QuizRoute
@@ -237,13 +237,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -272,6 +265,13 @@ declare module '@tanstack/react-router' {
       path: '/comparador'
       fullPath: '/comparador'
       preLoaderRoute: typeof ComparadorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel-gm7k3': {
+      id: '/panel-gm7k3'
+      path: '/panel-gm7k3'
+      fullPath: '/panel-gm7k3'
+      preLoaderRoute: typeof PanelGm7k3RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/perfil': {
@@ -373,11 +373,11 @@ const TopRouteWithChildren = TopRoute._addFileChildren(TopRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   BlogRoute: BlogRouteWithChildren,
   ChollosRoute: ChollosRoute,
   ComparadorRoute: ComparadorRoute,
+  PanelGm7k3Route: PanelGm7k3Route,
   PerfilRoute: PerfilRoute,
   ProductosRoute: ProductosRoute,
   QuizRoute: QuizRoute,

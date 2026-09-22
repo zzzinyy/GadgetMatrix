@@ -29,7 +29,7 @@ import {
   type ProductWithSpecs,
 } from "@/lib/catalog";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/panel-gm7k3")({
   head: () => ({
     meta: [
       { title: "Panel de administración | GadgetMatrix" },

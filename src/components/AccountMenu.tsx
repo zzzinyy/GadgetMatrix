@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { LogIn, LogOut, Trophy, UserRound, Shield } from "lucide-react";
+import { LogIn, LogOut, Trophy, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,14 +89,6 @@ export function AccountMenu() {
             Mis logros
           </Link>
         </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem asChild>
-            <Link to="/admin">
-              <Shield />
-              Administración
-            </Link>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={busy} onSelect={() => void signOut()}>
           <LogOut />

@@ -165,6 +165,34 @@ function RootComponent() {
   const router = useRouter();
   const [challenge, setChallenge] = useState(false);
 
+  // Acceso discreto al panel: sin enlaces en el DOM, se entra tecleando la
+  // secuencia "gma" en cualquier página (buffer de 1,5 s entre teclas).
+  useEffect(() => {
+    const SECRET = "gma";
+    let buffer = "";
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    function onKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key.length !== 1) return;
+      buffer = (buffer + event.key.toLowerCase()).slice(-SECRET.length);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        buffer = "";
+      }, 1500);
+      if (buffer === SECRET) {
+        buffer = "";
+        void router.navigate({ to: "/panel-gm7k3" });
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      clearTimeout(timer);
+    };
+  }, [router]);
+
   // Heurística antibot: cuenta páginas vistas por sesión y, al superar el
   // umbral de ráfaga, exige resolver el muro de caracteres antes de seguir.
   useEffect(() => {
