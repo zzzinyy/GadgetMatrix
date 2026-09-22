@@ -258,30 +258,10 @@ function AdminPage() {
           Tu cuenta ({session.user.email}) no tiene el rol de administrador asignado.
         </p>
         <div className="mt-6 flex flex-col gap-3">
-          <Button
-            onClick={async () => {
-              const { data, error } = await supabase.rpc(
-                "claim_first_admin" as never,
-              );
-              if (error) {
-                toast.error(error.message);
-                return;
-              }
-              if (data) {
-                toast.success("Ahora eres administrador. Recargando…");
-                window.location.reload();
-              } else {
-                toast.error("Ya existe un administrador en este sitio.");
-              }
-            }}
-          >
-            Reclamar rol de administrador
-          </Button>
           <Button variant="outline" onClick={() => supabase.auth.signOut()}>
             Cerrar sesión
           </Button>
         </div>
-
       </div>
     );
   }
