@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Reserva (fallback) vía Groq: proveedor gratuito que entra cuando Gemini
  * agota su cuota (HTTP 429 / RESOURCE_EXHAUSTED). Groq expone una API
  * compatible con OpenAI en https://api.groq.com/openai/v1/chat/completions.
@@ -64,6 +64,20 @@ function isModelNotFound(error: string, status?: number): boolean {
   );
 }
 
+/**
+ * Extrae el primer objeto JSON de una respuesta de modelo: quita vallas
+ * ```json ... ``` y recorta desde la primera { hasta la ultima }. Los
+ * modelos pequenos a veces decoran el JSON aunque se pida json_object.
+ */
+export function extractJsonText(raw: string): string {
+  let text = raw.trim();
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence && fence[1]?.trim()) text = fence[1].trim();
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start !== -1 && end > start) text = text.slice(start, end + 1);
+  return text;
+}
 export async function callGroq(options: GroqOptions): Promise<GroqResult> {
   const apiKey = options.apiKey?.trim();
   if (!apiKey) {

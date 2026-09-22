@@ -3,7 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 import { validateProduct, validatePublishRequest } from "../_shared/product-draft.ts";
 import { corsHeaders, preflightResponse } from "../_shared/cors.ts";
-import { callGroq, isQuotaError } from "../_shared/groq.ts";
+import { callGroq, extractJsonText, isQuotaError } from "../_shared/groq.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GROQ_API_KEY =
@@ -674,12 +674,24 @@ PROHIBIDO inventar precio, marca, specs o valoraci├│n: si no est├í en los
       // Cuota de Gemini agotada: intenta con la reserva Groq (texto plano,
       // sin lectura de URLs ni imagen, pero mantiene el flujo funcionando).
       if (isQuotaError(interaction?.error?.message, response.status)) {
+        // En modo reserva no hay datos verificados de la página: el modelo
+        // debe REDACTAR pros, contras, specs y análisis por sí mismo (como
+        // propuesta a revisar), no pedirlos. Precio/marca/URLs siguen sin
+        // inventarse nunca.
+        const fallbackSystem =
+          systemInstruction +
+          "\nMODO RESERVA (sin lectura de páginas): no hay DATOS VERIFICADOS, así que NO pidas pros, contras, especificaciones ni descripción. " +
+          "Redáctalos tú mismo a partir de tu conocimiento general del tipo de producto, como PROPUESTAS para que el admin las revise: " +
+          "3-5 pros, 2-4 contras, 5-8 specs con valores típicos plausibles (marca el mensaje con que son propuestas no verificadas), " +
+          "y un análisis de 2-3 párrafos sobrio. " +
+          "EXCEPCIONES que sigues sin poder inventar: price, rating, brand, amazon_url e image_url quedan vacíos si el admin no los aportó. " +
+          "Si falta el nombre del producto concreto, pregúntalo; si el admin ya dio nombre y datos, rellena TODA la ficha.";
         const fallback = await callGroq({
           apiKey: GROQ_API_KEY,
           fixedModel: GROQ_MODEL,
           jsonMode: true,
           messages: [
-            { role: "system", content: systemInstruction },
+            { role: "system", content: fallbackSystem },
             ...contents
               .filter((c: { type?: string }) => c?.type === "user_input")
               .flatMap((c: { content?: unknown }) =>
@@ -709,7 +721,7 @@ PROHIBIDO inventar precio, marca, specs o valoraci├│n: si no est├í en los
           );
         }
         try {
-          const decoded = JSON.parse(fallback.text);
+          const decoded = JSON.parse(extractJsonText(fallback.text));
           if (typeof decoded.message !== "string" || decoded.message.length > 10000)
             throw new Error();
           const draft = decoded.draft ? validateProduct(decoded.draft) : null;
