@@ -168,6 +168,93 @@ type AmazonFacts = {
   descriptionFromPage?: string;
 };
 
+// GEMINI-SEARCH-1: lector ligero via Gemini (google_search). Cuando el
+// scrape directo choca con el muro antibot de Amazon, una llamada minima
+// con google_search suele bastar para obtener titulo, marca, precio,
+// valoracion y ficha tecnica desde los servidores de Google. Gasta muy
+// poca cuota: entrada/salida de texto, sin url_context ni imagen.
+async function fetchFactsViaGeminiSearch(
+  productHint: string,
+  amazonUrl: string | null,
+): Promise<AmazonFacts> {
+  if (!GEMINI_API_KEY) return { ok: false, reason: "sin GEMINI_API_KEY" };
+  const question = amazonUrl
+    ? `Lee la ficha de Amazon ${amazonUrl} (o buscala con google_search si no puedes acceder directamente). Devuelve el producto exacto de esa ficha.`
+    : `Busca en Amazon.es el producto: ${productHint}. Devuelve el resultado principal mas relevante.`;
+  const prompt =
+    question +
+    `\n\nResponde EXCLUSIVAMENTE un objeto JSON con esta forma (sin texto fuera del JSON):\n` +
+    `{"ok":true,"title":"nombre comercial completo","brand":"marca","priceValue":numero_o_null,` +
+    `"currency":"EUR","ratingValue":numero_0a5_o_null,"reviewCount":"texto o vacio",` +
+    `"bullets":["puntos clave de la ficha"],"specsFromPage":[{"label":"","value":""}],` +
+    `"descriptionFromPage":"descripcion","availability":"disponibilidad"}.\n` +
+    `Reglas: solo datos que veas en la fuente; si un dato no aparece, pon null o []. No inventes precios ni valoraciones. Si tras buscar no encuentras el producto, responde {"ok":false}.`;
+  try {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY,
+        "Api-Revision": "2026-05-20",
+      },
+      body: JSON.stringify({
+        model: "gemini-3.6-flash",
+        system_instruction:
+          "Eres un extractor de datos de fichas de producto. Devuelves solo JSON, sin prosa.",
+        input: [{ type: "user_input", content: [{ type: "text", text: prompt }] }],
+        tools: [{ type: "google_search" }],
+        generation_config: { temperature: 0.1 },
+      }),
+    });
+    const interaction = await response.json().catch(() => null);
+    if (!response.ok) {
+      return { ok: false, reason: `Gemini busqueda HTTP ${response.status}` };
+    }
+    const answer =
+      (typeof interaction?.output_text === "string" && interaction.output_text) ||
+      (Array.isArray(interaction?.steps)
+        ? interaction.steps
+            .filter((step: { type?: string }) => step?.type === "model_output")
+            .flatMap((step: { content?: { type?: string; text?: string }[] }) =>
+              Array.isArray(step?.content) ? step.content : [],
+            )
+            .filter((part: { type?: string }) => part?.type === "text")
+            .map((part: { text?: string }) => part.text || "")
+            .join("")
+        : "");
+    if (!answer) return { ok: false, reason: "respuesta vacia de Gemini busqueda" };
+    const decoded = JSON.parse(extractJsonText(answer)) as Record<string, unknown>;
+    if (decoded.ok !== true) return { ok: false, reason: "producto no localizado" };
+    const num = (v: unknown): number | null =>
+      typeof v === "number" && Number.isFinite(v) ? v : null;
+    return {
+      ok: true,
+      title: typeof decoded.title === "string" ? decoded.title : undefined,
+      brand: typeof decoded.brand === "string" ? decoded.brand : undefined,
+      priceValue: num(decoded.priceValue),
+      currency: "EUR",
+      ratingValue: num(decoded.ratingValue),
+      reviewCount: typeof decoded.reviewCount === "string" ? decoded.reviewCount : undefined,
+      bullets: Array.isArray(decoded.bullets)
+        ? decoded.bullets.filter((b): b is string => typeof b === "string" && b.length > 0)
+        : undefined,
+      specsFromPage: Array.isArray(decoded.specsFromPage)
+        ? decoded.specsFromPage.filter(
+            (s): s is { label: string; value: string } =>
+              typeof s === "object" &&
+              s !== null &&
+              typeof (s as { label?: unknown }).label === "string" &&
+              typeof (s as { value?: unknown }).value === "string",
+          )
+        : undefined,
+      descriptionFromPage:
+        typeof decoded.descriptionFromPage === "string" ? decoded.descriptionFromPage : undefined,
+      availability: typeof decoded.availability === "string" ? decoded.availability : undefined,
+    };
+  } catch (error) {
+    return { ok: false, reason: `Gemini busqueda fallo: ${(error as Error).message}` };
+  }
+}
 // AMAZON-FACTS-1
 /** Descarga la ficha p├║blica de Amazon y extrae los datos visibles. */
 async function fetchAmazonFacts(amazonUrl: string): Promise<AmazonFacts> {
@@ -505,6 +592,23 @@ Deno.serve(async (req) => {
     let amazonNote = "";
     if (amazonUrl) {
       facts = await fetchAmazonFacts(amazonUrl);
+      // Escrapeo directo bloqueado por el muro antibot: intenta la lectura
+      // ligera via Gemini google_search (gasta muy poca cuota) antes de rendirse.
+      if (!facts.ok) {
+        const viaSearch = await fetchFactsViaGeminiSearch(
+          messages
+            .filter((m) => m.role === "user")
+            .map((m) => m.content)
+            .join(" ")
+            .slice(0, 400),
+          amazonUrl,
+        );
+        if (viaSearch.ok) {
+          facts = viaSearch;
+          amazonNote =
+            "Amazon no se pudo leer directamente (muro antibot), pero Gemini lo leyo desde Google (busqueda).";
+        }
+      }
       if (facts.ok) {
         amazonNote = `La p├ígina de Amazon se ley├│ bien (ASIN ${asinFromAmazonUrl(amazonUrl) ?? "desconocido"}).`;
         if (facts.priceText && facts.currency !== "EUR")
