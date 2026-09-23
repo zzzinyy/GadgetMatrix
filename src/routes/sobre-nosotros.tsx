@@ -53,6 +53,21 @@ function AboutPage() {
             que aparece en Amazon en el momento de la compra.
           </p>
         </section>
+        <section>
+          <h2 className="font-display text-xl font-semibold">Contacto</h2>
+          <p className="mt-2 text-muted-foreground">
+            ¿Dudas, sugerencias o un fallo que quieras que corrijamos? Escríbenos a{" "}
+            <a href="mailto:ziny967@gmail.com" className="text-primary hover:underline">
+              ziny967@gmail.com
+            </a>{" "}
+            y te responderemos lo antes posible. Para consultas sobre tus datos personales, mira
+            también nuestra{" "}
+            <Link to="/privacidad" className="text-primary hover:underline">
+              política de privacidad
+            </Link>
+            .
+          </p>
+        </section>
       </div>
 
       <div className="mt-10">

@@ -37,7 +37,11 @@ function PrivacidadPage() {
         </h2>
         <p>
           El responsable del Sitio es su titular. Puedes contactar por cualquier cuestión
-          relativa a datos personales a través de la página{" "}
+          relativa a datos personales por correo electrónico en{" "}
+          <a href="mailto:ziny967@gmail.com" className="text-primary hover:underline">
+            ziny967@gmail.com
+          </a>
+          , o a través de la página{" "}
           <a href={`${SITE_URL}/sobre-nosotros`} className="text-primary hover:underline">
             Sobre nosotros
           </a>{" "}
@@ -170,12 +174,14 @@ function PrivacidadPage() {
           Conservamos los datos de cuenta mientras esta exista.
         </p>
 
-        <h2 className="pt-4 font-display text-lg font-semibold text-foreground">
-          7. Tus derechos (RGPD)
-        </h2>
+        <h2 className="pt-4 font-display text-lg font-semibold text-foreground">7. Tus derechos (RGPD)</h2>
         <p>
           Puedes ejercer los derechos de acceso, rectificación, supresión, oposición,
-          limitación y portabilidad escribiéndonos desde Sobre nosotros. También tienes
+          limitación y portabilidad escribiéndonos a{" "}
+          <a href="mailto:ziny967@gmail.com" className="text-primary hover:underline">
+            ziny967@gmail.com
+          </a>{" "}
+          o desde Sobre nosotros. También tienes
           derecho a reclamar ante la Agencia Española de Protección de Datos (
           <a
             href="https://www.aepd.es"

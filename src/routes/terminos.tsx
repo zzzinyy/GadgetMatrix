@@ -89,7 +89,11 @@ function TerminosPage() {
 
         <h2 className="pt-4 font-display text-lg font-semibold text-foreground">9. Contacto</h2>
         <p>
-          Para cualquier consulta, visita{" "}
+          Para cualquier consulta, escríbenos a{" "}
+          <a href="mailto:ziny967@gmail.com" className="text-primary hover:underline">
+            ziny967@gmail.com
+          </a>{" "}
+          o visita{" "}
           <a href={`${SITE_URL}/sobre-nosotros`} className="text-primary hover:underline">
             Sobre nosotros
           </a>

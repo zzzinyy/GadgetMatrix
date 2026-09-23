@@ -26,7 +26,12 @@ function AvisoLegalPage() {
         <h2 className="pt-4 font-display text-lg font-semibold text-foreground">1. Titularidad</h2>
         <p>
           Este sitio web, GadgetMatrix (en adelante, el «Sitio»), es de titularidad privada. Para
-          cualquier asunto relacionado con el Sitio puedes contactar a través de la página{" "}
+          cualquier asunto relacionado con el Sitio —incluidos derechos sobre datos personales—
+          puedes contactar por correo electrónico en{" "}
+          <a href="mailto:ziny967@gmail.com" className="text-primary hover:underline">
+            ziny967@gmail.com
+          </a>{" "}
+          o a través de la página{" "}
           <a href={`${SITE_URL}/sobre-nosotros`} className="text-primary hover:underline">
             Sobre nosotros
           </a>.
