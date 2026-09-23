@@ -226,6 +226,42 @@ test("URL de Amazon + imagen: la ficha se rellena con lo leído", async () => {
   assert.deepEqual(geminiBody.tools, [{ type: "url_context" }, { type: "google_search" }]);
 });
 
+test("imagen grande: el base64 viaja íntegro (regresión del relleno interno)", async () => {
+  // Regresión: el trozo de codificación era 0x8000 (32768), que no es múltiplo
+  // de 3. Base64 agrupa los bytes de 3 en 3, así que cada trozo añadía relleno
+  // "=" EN MEDIO del string concatenado y Gemini respondía
+  // "The value is invalid for 'input[0].content[1].data'. Expected string, corrupt base64".
+  // Falla siempre con imágenes reales (>32 KB); con trozo múltiplo de 3 es válido.
+  const bigImage = new Uint8Array(250_000);
+  for (let i = 0; i < bigImage.length; i += 1) bigImage[i] = (i * 31) % 251;
+  const app = endpoint({
+    external: async (target) => {
+      if (/media-amazon\.com|\/images\/I\//.test(target)) {
+        return new Response(bigImage, { headers: { "content-type": "image/jpeg" } });
+      }
+      if (/amazon\.(es|com|de|fr|it|co\.uk)/.test(target)) {
+        return new Response(amazonHtml, { headers: { "content-type": "text/html" } });
+      }
+      return new Response(null, { status: 404 });
+    },
+  });
+  const response = await app.invoke({
+    action: "prepare",
+    messages: [{ role: "user", content: "https://www.amazon.es/dp/B0FMFRFNWG" }],
+  });
+  assert.equal(response.status, 200);
+  const geminiBody = app.calls[app.calls.indexOf("gemini") + 2];
+  const imagePart = geminiBody.input[0].content.find((part) => part.type === "image");
+  assert.ok(imagePart, "la imagen debe viajar inline");
+  const data = imagePart.data;
+  // Sin relleno "=" salvo, como mucho, el final: base64 concatenable.
+  assert.equal(data.slice(0, -2).includes("="), false, "base64 con relleno interno");
+  assert.equal(data.length, Math.ceil(bigImage.length / 3) * 4);
+  const decoded = Buffer.from(data, "base64");
+  assert.equal(decoded.length, bigImage.length);
+  assert.equal(Buffer.compare(decoded, Buffer.from(bigImage)), 0);
+});
+
 test("CORS: el preflight solo pasa con origen permitido", async () => {
   const app = endpoint();
   const allowed = await app.request("OPTIONS", "https://zzzinyy.github.io");

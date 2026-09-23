@@ -400,6 +400,22 @@ async function fetchAmazonFacts(amazonUrl: string): Promise<AmazonFacts> {
 }
 
 // AMAZON-FACTS-2
+/**
+ * Codifica bytes a base64 por trozos para no desbordar la pila con arrays
+ * enormes. El tamaño del trozo DEBE ser múltiplo de 3: base64 agrupa los bytes
+ * de 3 en 3, y cualquier resto distinto de cero genera relleno "=" EN MEDIO del
+ * string, lo que invalida la codificación completa (Gemini responde
+ * "corrupt base64"). 24576 = 3 * 8192.
+ */
+function toBase64(bytes: Uint8Array): string {
+  const chunk = 24576;
+  let base64 = "";
+  for (let offset = 0; offset < bytes.length; offset += chunk) {
+    base64 += btoa(String.fromCharCode(...bytes.subarray(offset, offset + chunk)));
+  }
+  return base64;
+}
+
 /** Comprueba que una URL de imagen responde y es imagen; devuelve sus bytes (máx ~2 MB). */
 async function pickWorkingImage(
   urls: string[],
@@ -422,12 +438,7 @@ async function pickWorkingImage(
         const buffer = await response.arrayBuffer();
         if (buffer.byteLength > 2_000_000) continue;
         if (buffer.byteLength === 0) continue;
-        let base64 = "";
-        const chunk = 0x8000;
-        const view = new Uint8Array(buffer);
-        for (let offset = 0; offset < view.length; offset += chunk) {
-          base64 += btoa(String.fromCharCode(...view.subarray(offset, offset + chunk)));
-        }
+        const base64 = toBase64(new Uint8Array(buffer));
         return { url, bytes: buffer.byteLength, base64, mimeType: mimeType.split(";")[0] };
       } finally {
         clearTimeout(timeout);
