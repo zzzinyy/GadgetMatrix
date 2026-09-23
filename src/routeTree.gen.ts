@@ -11,14 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AvisoLegalRouteImport } from './routes/aviso-legal'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ChollosRouteImport } from './routes/chollos'
 import { Route as ComparadorRouteImport } from './routes/comparador'
 import { Route as PanelGm7k3RouteImport } from './routes/panel-gm7k3'
 import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as SobreNosotrosRouteImport } from './routes/sobre-nosotros'
+import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as TopRouteImport } from './routes/top'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -34,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AvisoLegalRoute = AvisoLegalRouteImport.update({
+  id: '/aviso-legal',
+  path: '/aviso-legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogRoute = BlogRouteImport.update({
@@ -61,6 +69,11 @@ const PerfilRoute = PerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadRoute = PrivacidadRouteImport.update({
+  id: '/privacidad',
+  path: '/privacidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductosRoute = ProductosRouteImport.update({
   id: '/productos',
   path: '/productos',
@@ -74,6 +87,11 @@ const QuizRoute = QuizRouteImport.update({
 const SobreNosotrosRoute = SobreNosotrosRouteImport.update({
   id: '/sobre-nosotros',
   path: '/sobre-nosotros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerminosRoute = TerminosRouteImport.update({
+  id: '/terminos',
+  path: '/terminos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TopRoute = TopRouteImport.update({
@@ -110,14 +128,17 @@ const TopSlugRoute = TopSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/aviso-legal': typeof AvisoLegalRoute
   '/blog': typeof BlogRouteWithChildren
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/panel-gm7k3': typeof PanelGm7k3Route
   '/perfil': typeof PerfilRoute
+  '/privacidad': typeof PrivacidadRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/terminos': typeof TerminosRoute
   '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
@@ -128,13 +149,16 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/aviso-legal': typeof AvisoLegalRoute
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/panel-gm7k3': typeof PanelGm7k3Route
   '/perfil': typeof PerfilRoute
+  '/privacidad': typeof PrivacidadRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/terminos': typeof TerminosRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
   '/top/$slug': typeof TopSlugRoute
@@ -145,14 +169,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/aviso-legal': typeof AvisoLegalRoute
   '/blog': typeof BlogRouteWithChildren
   '/chollos': typeof ChollosRoute
   '/comparador': typeof ComparadorRoute
   '/panel-gm7k3': typeof PanelGm7k3Route
   '/perfil': typeof PerfilRoute
+  '/privacidad': typeof PrivacidadRoute
   '/productos': typeof ProductosRoute
   '/quiz': typeof QuizRoute
   '/sobre-nosotros': typeof SobreNosotrosRoute
+  '/terminos': typeof TerminosRoute
   '/top': typeof TopRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/producto/$slug': typeof ProductoSlugRoute
@@ -165,14 +192,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/aviso-legal'
     | '/blog'
     | '/chollos'
     | '/comparador'
     | '/panel-gm7k3'
     | '/perfil'
+    | '/privacidad'
     | '/productos'
     | '/quiz'
     | '/sobre-nosotros'
+    | '/terminos'
     | '/top'
     | '/blog/$slug'
     | '/producto/$slug'
@@ -183,13 +213,16 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/aviso-legal'
     | '/chollos'
     | '/comparador'
     | '/panel-gm7k3'
     | '/perfil'
+    | '/privacidad'
     | '/productos'
     | '/quiz'
     | '/sobre-nosotros'
+    | '/terminos'
     | '/blog/$slug'
     | '/producto/$slug'
     | '/top/$slug'
@@ -199,14 +232,17 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/aviso-legal'
     | '/blog'
     | '/chollos'
     | '/comparador'
     | '/panel-gm7k3'
     | '/perfil'
+    | '/privacidad'
     | '/productos'
     | '/quiz'
     | '/sobre-nosotros'
+    | '/terminos'
     | '/top'
     | '/blog/$slug'
     | '/producto/$slug'
@@ -218,14 +254,17 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  AvisoLegalRoute: typeof AvisoLegalRoute
   BlogRoute: typeof BlogRouteWithChildren
   ChollosRoute: typeof ChollosRoute
   ComparadorRoute: typeof ComparadorRoute
   PanelGm7k3Route: typeof PanelGm7k3Route
   PerfilRoute: typeof PerfilRoute
+  PrivacidadRoute: typeof PrivacidadRoute
   ProductosRoute: typeof ProductosRoute
   QuizRoute: typeof QuizRoute
   SobreNosotrosRoute: typeof SobreNosotrosRoute
+  TerminosRoute: typeof TerminosRoute
   TopRoute: typeof TopRouteWithChildren
   ProductoSlugRoute: typeof ProductoSlugRoute
 }
@@ -244,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aviso-legal': {
+      id: '/aviso-legal'
+      path: '/aviso-legal'
+      fullPath: '/aviso-legal'
+      preLoaderRoute: typeof AvisoLegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog': {
@@ -281,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidad': {
+      id: '/privacidad'
+      path: '/privacidad'
+      fullPath: '/privacidad'
+      preLoaderRoute: typeof PrivacidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/productos': {
       id: '/productos'
       path: '/productos'
@@ -300,6 +353,13 @@ declare module '@tanstack/react-router' {
       path: '/sobre-nosotros'
       fullPath: '/sobre-nosotros'
       preLoaderRoute: typeof SobreNosotrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terminos': {
+      id: '/terminos'
+      path: '/terminos'
+      fullPath: '/terminos'
+      preLoaderRoute: typeof TerminosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/top': {
@@ -374,14 +434,17 @@ const TopRouteWithChildren = TopRoute._addFileChildren(TopRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  AvisoLegalRoute: AvisoLegalRoute,
   BlogRoute: BlogRouteWithChildren,
   ChollosRoute: ChollosRoute,
   ComparadorRoute: ComparadorRoute,
   PanelGm7k3Route: PanelGm7k3Route,
   PerfilRoute: PerfilRoute,
+  PrivacidadRoute: PrivacidadRoute,
   ProductosRoute: ProductosRoute,
   QuizRoute: QuizRoute,
   SobreNosotrosRoute: SobreNosotrosRoute,
+  TerminosRoute: TerminosRoute,
   TopRoute: TopRouteWithChildren,
   ProductoSlugRoute: ProductoSlugRoute,
 }

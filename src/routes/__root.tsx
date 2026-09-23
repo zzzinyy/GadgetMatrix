@@ -18,6 +18,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SettingsProvider } from "@/components/SettingsProvider";
 import { BotWall } from "@/components/BotWall";
+import { CookieBanner } from "@/components/CookieBanner";
 import { recordPageview, shouldChallenge, sessionStorageLike } from "@/lib/botwall";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -223,6 +224,7 @@ function RootComponent() {
             </div>
             {/* Abajo a la derecha: arriba taparía la cabecera fija y sus botones. */}
             <Toaster position="bottom-right" />
+            <CookieBanner />
           </>
         )}
       </SettingsProvider>

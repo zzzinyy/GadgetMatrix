@@ -113,12 +113,25 @@ const STRINGS = {
     allProducts: { es: "Todos los productos", en: "All products" },
     about: { es: "Sobre nosotros", en: "About us" },
     adminAccess: { es: "Acceso administrador", en: "Admin access" },
+    privacy: { es: "Política de privacidad", en: "Privacy policy" },
+    legal: { es: "Aviso legal", en: "Legal notice" },
+    terms: { es: "Términos y condiciones", en: "Terms and conditions" },
+    legalTitle: { es: "Legal", en: "Legal" },
     affiliateTitle: { es: "Aviso de afiliados", en: "Affiliate disclosure" },
     affiliateText: {
       es: "En calidad de Afiliado de Amazon, obtenemos ingresos por las compras adscritas que cumplen los requisitos aplicables. Los precios pueden variar respecto a los mostrados.",
       en: "As an Amazon Associate we earn from qualifying purchases. Prices may differ from those shown.",
     },
     rights: { es: "Todos los derechos reservados.", en: "All rights reserved." },
+  },
+  cookies: {
+    text: {
+      es: "Usamos cookies propias imprescindibles y, con tu permiso, cookies de Google AdSense para anuncios personalizados. Puedes cambiar tu elección en la política de privacidad.",
+      en: "We use essential own cookies and, with your permission, Google AdSense cookies for personalized ads. You can change your choice in the privacy policy.",
+    },
+    accept: { es: "Aceptar", en: "Accept" },
+    reject: { es: "Rechazar", en: "Reject" },
+    privacy: { es: "Más información", en: "Learn more" },
   },
   notFound: {
     code: { es: "Error 404", en: "Error 404" },

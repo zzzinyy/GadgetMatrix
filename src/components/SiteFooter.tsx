@@ -31,6 +31,24 @@ export function SiteFooter() {
               </Link>
             </li>
           </ul>
+          <p className="mt-5 font-medium">{tr("footer", "legalTitle")}</p>
+          <ul className="mt-2 space-y-1 text-muted-foreground">
+            <li>
+              <Link to="/privacidad" className="hover:text-foreground">
+                {tr("footer", "privacy")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/aviso-legal" className="hover:text-foreground">
+                {tr("footer", "legal")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/terminos" className="hover:text-foreground">
+                {tr("footer", "terms")}
+              </Link>
+            </li>
+          </ul>
         </div>
         <div className="text-sm text-muted-foreground">
           <p className="font-medium text-foreground">{tr("footer", "affiliateTitle")}</p>
