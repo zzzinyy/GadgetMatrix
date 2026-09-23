@@ -17,32 +17,107 @@ export type ProductDraft = {
   specs: { label: string; value: string }[];
 };
 
+const MAX_LIST_ITEMS = 30;
+const MAX_LIST_ITEM_LENGTH = 500;
+
+/** Interpreta un token numérico admitiendo separadores ES (1.234,56) y EN. */
+function parseNumericToken(token: string): number | null {
+  if (!token) return null;
+  let normalized = token;
+  if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(token)) normalized = token.replace(/\./g, "").replace(",", ".");
+  else if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(token)) normalized = token.replace(/,/g, "");
+  else normalized = token.replace(",", ".");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Número a partir de lo que devuelva un modelo o una hoja de cálculo:
+ * 899.99, "899,99", "899,99 EUR", "1.234,56", "4.5 de 5 estrellas".
+ */
+export function coerceNumber(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  const cleaned = value
+    .replace(/[\s\u00a0]/g, "")
+    .replace(/[\u20ac$\u00a3]/g, "")
+    .replace(/(?:eur|euros|usd|gbp)/gi, "");
+  const direct = parseNumericToken(cleaned);
+  if (direct != null) return direct;
+  const match = value.match(/-?\d+(?:[.,]\d+)?/);
+  return match ? parseNumericToken(match[0]) : null;
+}
+
+/** Booleanos tal como los devuelven modelos u hojas de cálculo. */
+export function coerceBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string")
+    return ["true", "si", "s\u00ed", "yes", "1", "destacado"].includes(value.trim().toLowerCase());
+  return false;
+}
+
+/**
+ * Pros/contras: acepta array de textos, texto suelto con saltos de linea o
+ * guiones, y arrays de objetos {label,value} que algunos modelos devuelven.
+ */
+export function coerceList(value: unknown): string[] {
+  if (value == null) return [];
+  const items = Array.isArray(value) ? value : [value];
+  const out: string[] = [];
+  for (const item of items) {
+    if (typeof item === "string" || typeof item === "number") {
+      for (const part of String(item).split(/\r?\n|[\u2022\u00b7]/)) out.push(part);
+    } else if (item && typeof item === "object") {
+      const record = item as Record<string, unknown>;
+      const pick = (keys: string[]) => {
+        for (const key of keys) {
+          const candidate = record[key];
+          if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+          if (typeof candidate === "number") return String(candidate);
+        }
+        return "";
+      };
+      const label = pick(["label", "title", "name"]);
+      const detail = pick(["value", "text", "description", "detail"]);
+      if (label && detail) out.push(`${label}: ${detail}`);
+      else if (label || detail) out.push(label || detail);
+    }
+  }
+  return out
+    .map((item) =>
+      item
+        .replace(/^[\s\-*\u2022\u00b7]+/, "")
+        .replace(/[\u2013\u2014]/g, "-")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter((item) => item.length > 1)
+    .map((item) => item.slice(0, MAX_LIST_ITEM_LENGTH))
+    .slice(0, MAX_LIST_ITEMS);
+}
+
 export function validateProduct(value: unknown, publishing = false): ProductDraft {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error("Ficha no válida.");
   const data = value as Record<string, unknown>;
+  // El modelo puede devolver escalares donde se espera texto: se convierten y
+  // se recortan en lugar de descartar la ficha completa.
   function text(key: string, max: number) {
-    const v = data[key] ?? "";
-    if (typeof v !== "string" || v.trim().length > max)
-      throw new Error(`${key}: texto no válido (máximo ${max}).`);
-    return v.trim();
+    const raw = data[key];
+    const v =
+      raw == null ? "" : typeof raw === "string" ? raw : typeof raw === "number" ? String(raw) : "";
+    return v.trim().slice(0, max);
   }
   function number(key: string, max: number) {
-    const v = data[key];
-    if (v == null || v === "") return null;
-    if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > max)
-      throw new Error(`${key}: número fuera de rango.`);
-    return v;
+    const parsed = coerceNumber(data[key]);
+    if (parsed == null) return null;
+    if (parsed < 0 || parsed > max) throw new Error(`${key}: número fuera de rango.`);
+    return parsed;
   }
   function list(key: string) {
-    const v = data[key] ?? [];
-    if (
-      !Array.isArray(v) ||
-      v.length > 30 ||
-      v.some((x) => typeof x !== "string" || x.length > 500)
-    )
-      throw new Error(`${key}: lista no válida.`);
-    return (v as string[]).map((x) => x.trim()).filter(Boolean);
+    return coerceList(data[key]);
   }
   const name = text("name", 120);
   const slug = text("slug", 80);
